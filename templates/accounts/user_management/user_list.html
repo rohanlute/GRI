@@ -1,195 +1,149 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}
-Dashboard
+{% block title %}User List{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-list-page .page-header-right-items-wrapper {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .user-list-page .search-form {
+        min-width: 280px;
+    }
+
+    .user-list-page .search-form .input-group {
+        width: 100%;
+    }
+
+    .user-list-page .user-table-card {
+        border-radius: 18px;
+        overflow: visible;
+    }
+
+    .user-list-page .user-table-card .table-responsive {
+        overflow: visible;
+    }
+
+    .user-list-page .user-table-card table {
+        margin-bottom: 0;
+    }
+
+    .user-list-page .user-table-card thead th {
+        padding: 1rem 1.25rem;
+        white-space: nowrap;
+    }
+
+    .user-list-page .user-table-card tbody td {
+        padding: 1rem 1.25rem;
+        vertical-align: middle;
+    }
+
+    .user-list-page .user-avatar {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+    }
+
+    .user-list-page .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .user-list-page .user-meta {
+        line-height: 1.1;
+    }
+
+    .user-list-page .actions-toggle {
+        width: 32px;
+        height: 32px;
+    }
+
+    .user-list-page .dropdown-menu {
+        z-index: 1060;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<div class="user-list-page">
 <!-- [ page-header ] start -->
 <div class="page-header">
     <div class="page-header-left d-flex align-items-center">
         <div class="page-header-title">
-            <h5 class="m-b-10">InHouse-Employee</h5>
+            <h5 class="m-b-10">User Management</h5>
         </div>
         <ul class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Home</a></li>
-            <li class="breadcrumb-item">List</li>
+            <li class="breadcrumb-item">User Management</li>
         </ul>
     </div>
     <div class="page-header-right ms-auto">
         <div class="page-header-right-items">
-            <div class="d-flex d-md-none">
-                <a href="javascript:void(0)" class="page-header-right-close-toggle">
-                    <i class="feather-arrow-left me-2"></i>
-                    <span>Back</span>
-                </a>
-            </div>
             <div class="d-flex align-items-center gap-2 page-header-right-items-wrapper">
-                <a href="javascript:void(0);" class="btn btn-icon btn-light-brand" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                <a href="javascript:void(0);" class="btn btn-icon btn-light-brand" data-bs-toggle="collapse" data-bs-target="#userStatsCollapse">
                     <i class="feather-bar-chart"></i>
                 </a>
-                <div class="dropdown">
-                    <a class="btn btn-icon btn-light-brand" data-bs-toggle="dropdown" data-bs-offset="0, 10" data-bs-auto-close="outside">
-                        <i class="feather-filter"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-eye me-3"></i>
-                            <span>All</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-users me-3"></i>
-                            <span>Group</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-flag me-3"></i>
-                            <span>Country</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-dollar-sign me-3"></i>
-                            <span>Invoice</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-briefcase me-3"></i>
-                            <span>Project</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-user-check me-3"></i>
-                            <span>Active</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="feather-user-minus me-3"></i>
-                            <span>Inactive</span>
-                        </a>
+                <form method="get" class="d-flex search-form">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="feather-search"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Search user..."
+                            value="{{ request.GET.search }}">
                     </div>
-                </div>
-                <div class="dropdown">
-                    <a class="btn btn-icon btn-light-brand" data-bs-toggle="dropdown" data-bs-offset="0, 10" data-bs-auto-close="outside">
-                        <i class="feather-paperclip"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="bi bi-filetype-pdf me-3"></i>
-                            <span>PDF</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="bi bi-filetype-csv me-3"></i>
-                            <span>CSV</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="bi bi-filetype-xml me-3"></i>
-                            <span>XML</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="bi bi-filetype-txt me-3"></i>
-                            <span>Text</span>
-                        </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="bi bi-filetype-exe me-3"></i>
-                            <span>Excel</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="javascript:void(0);" class="dropdown-item">
-                            <i class="bi bi-printer me-3"></i>
-                            <span>Print</span>
-                        </a>
-                    </div>
-                </div>
+                </form>
+                {% if request.GET.search %}
+                <a href="{% url 'accounts:user_list' %}" class="btn btn-light-danger">
+                    <i class="feather-x me-1"></i> Clear
+                </a>
+                {% endif %}
                 <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
                     <i class="feather-plus me-2"></i>
-                    <span>Create</span>
+                    <span>Create User</span>
                 </a>
             </div>
-        </div>
-        <div class="d-md-none d-flex align-items-center">
-            <a href="javascript:void(0)" class="page-header-right-open-toggle">
-                <i class="feather-align-right fs-20"></i>
-            </a>
         </div>
     </div>
 </div>
-<div id="collapseOne" class="accordion-collapse collapse page-header-collapse">
+<div id="userStatsCollapse" class="accordion-collapse collapse page-header-collapse">
     <div class="accordion-body pb-2">
-        <div class="row">
-            <div class="col-xxl-3 col-md-6">
+        <div class="row g-4">
+            <div class="col-xl-6 col-md-6">
                 <div class="card stretch stretch-full">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-text avatar-xl rounded">
-                                    <i class="feather-users"></i>
-                                </div>
-                                <a href="javascript:void(0);" class="fw-bold d-block">
-                                    <span class="text-truncate-1-line">Total Users</span>
-                                    <span class="fs-24 fw-bolder d-block">26,595</span>
-                                </a>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-text avatar-xl rounded">
+                                <i class="feather-users"></i>
                             </div>
-                            <div class="badge bg-soft-success text-success">
-                                <i class="feather-arrow-up fs-10 me-1"></i>
-                                <span>36.85%</span>
+                            <div>
+                                <span class="text-truncate-1-line">Total Users</span>
+                                <span class="fs-24 fw-bolder d-block">
+                                    {{ total_users_count|default:"0" }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-xxl-3 col-md-6">
+            <div class="col-xl-6 col-md-6">
                 <div class="card stretch stretch-full">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-text avatar-xl rounded">
-                                    <i class="feather-user-check"></i>
-                                </div>
-                                <a href="javascript:void(0);" class="fw-bold d-block">
-                                    <span class="text-truncate-1-line">Active Users</span>
-                                    <span class="fs-24 fw-bolder d-block">2,245</span>
-                                </a>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-text avatar-xl rounded">
+                                <i class="feather-user-check"></i>
                             </div>
-                            <div class="badge bg-soft-danger text-danger">
-                                <i class="feather-arrow-down fs-10 me-1"></i>
-                                <span>24.56%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xxl-3 col-md-6">
-                <div class="card stretch stretch-full">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-text avatar-xl rounded">
-                                    <i class="feather-user-plus"></i>
-                                </div>
-                                <a href="javascript:void(0);" class="fw-bold d-block">
-                                    <span class="text-truncate-1-line">New Users</span>
-                                    <span class="fs-24 fw-bolder d-block">1,254</span>
-                                </a>
-                            </div>
-                            <div class="badge bg-soft-success text-success">
-                                <i class="feather-arrow-up fs-10 me-1"></i>
-                                <span>33.29%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xxl-3 col-md-6">
-                <div class="card stretch stretch-full">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-text avatar-xl rounded">
-                                    <i class="feather-user-minus"></i>
-                                </div>
-                                <a href="javascript:void(0);" class="fw-bold d-block">
-                                    <span class="text-truncate-1-line">Inactive Users</span>
-                                    <span class="fs-24 fw-bolder d-block">4,586</span>
-                                </a>
-                            </div>
-                            <div class="badge bg-soft-danger text-danger">
-                                <i class="feather-arrow-down fs-10 me-1"></i>
-                                <span>42.47%</span>
+                            <div>
+                                <span class="text-truncate-1-line">Active Users</span>
+                                <span class="fs-24 fw-bolder d-block">
+                                    {{ active_users_count|default:0 }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -199,240 +153,115 @@ Dashboard
     </div>
 </div>
 <!-- [ page-header ] end -->
-<!-- [ Main Content ] start -->
+
 <div class="main-content">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card stretch stretch-full">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="customerList">
-                            <thead>
-                                <tr>
-                                    <th class="wd-30">
-                                        <div class="btn-group mb-1">
-                                            <div class="custom-control custom-checkbox ms-1">
-                                                <input type="checkbox" class="custom-control-input" id="checkAllCustomer">
-                                                <label class="custom-control-label" for="checkAllCustomer"></label>
-                                            </div>
-                                        </div>
-                                    </th>
-                                    <th>Name</th>
-                                    <th>User Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Depatment</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <!-- <tbody>
-                                <tr class="single-item">
-                                    <td>
-                                        <div class="item-checkbox ms-1">
-                                            <div class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input checkbox" id="checkBox_1">
-                                                <label class="custom-control-label" for="checkBox_1"></label>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <a href="customers-view.html" class="hstack gap-3">
-                                            <div class="avatar-image avatar-md">
-                                                <img src="{% static 'images/avatar/1.png' %}" alt="" class="img-fluid">
-                                            </div>
-                                            <div>
-                                                <span class="text-truncate-1-line">Alexandra Della</span>
-                                            </div>
-                                        </a>
-                                    </td>
-                                    <td>username</td>
-                                    <td><a href="apps-email.html">alex@example.com</a></td>
-                                    <td>+1 (375) 9632 548</td>
-                                    <td>Department Name</td>
-                                    <td>
-                                        <select class="form-control" data-select2-selector="status">
-                                            <option value="success" data-bg="bg-success" selected>Active</option>
-                                            <option value="warning" data-bg="bg-warning">Inactive</option>
-                                            <option value="danger" data-bg="bg-danger">Declined</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <div class="hstack gap-2 justify-content-end">
-                                            <a href="customers-view.html" class="avatar-text avatar-md">
-                                                <i class="feather feather-eye"></i>
-                                            </a>
-                                            <div class="dropdown">
-                                                <a href="javascript:void(0)" class="avatar-text avatar-md" data-bs-toggle="dropdown" data-bs-offset="0,21">
-                                                    <i class="feather feather-more-horizontal"></i>
-                                                </a>
-                                                <ul class="dropdown-menu">
-                                                    <li>
-                                                        <a class="dropdown-item" href="javascript:void(0)">
-                                                            <i class="feather feather-edit-3 me-3"></i>
-                                                            <span>Edit</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item printBTN" href="javascript:void(0)">
-                                                            <i class="feather feather-printer me-3"></i>
-                                                            <span>Print</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="javascript:void(0)">
-                                                            <i class="feather feather-clock me-3"></i>
-                                                            <span>Remind</span>
-                                                        </a>
-                                                    </li>
-                                                    <li class="dropdown-divider"></li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="javascript:void(0)">
-                                                            <i class="feather feather-archive me-3"></i>
-                                                            <span>Archive</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="javascript:void(0)">
-                                                            <i class="feather feather-alert-octagon me-3"></i>
-                                                            <span>Report Spam</span>
-                                                        </a>
-                                                    </li>
-                                                    <li class="dropdown-divider"></li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="javascript:void(0)">
-                                                            <i class="feather feather-trash-2 me-3"></i>
-                                                            <span>Delete</span>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody> -->
-                            <tbody>
-
-                                {% for user in users %}
-
-                                <tr class="single-item">
-
-                                    <td>
-                                        <div class="item-checkbox ms-1">
-                                            <div class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input checkbox"
-                                                    id="checkBox_{{ user.id }}">
-
-                                                <label class="custom-control-label" 
-                                                    for="checkBox_{{ user.id }}">
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        <div class="hstack gap-3">
-
-                                            <div class="avatar-image avatar-md">
-
-                                                {% if user.profile_image %}
-                                                    <img src="{{ user.profile_image.url }}"
-                                                        class="img-fluid">
-                                                {% else %}
-                                                    <img src="{% static 'images/avatar/1.png' %}"
-                                                        class="img-fluid">
-                                                {% endif %}
-
-                                            </div>
-
-                                            <div>
-                                                {{ user.full_name }}
-                                            </div>
-
-                                        </div>
-                                    </td>
-
-                                    <td>
-                                        {{ user.username }}
-                                    </td>
-
-                                    <td>
-                                        {{ user.email }}
-                                    </td>
-
-                                    <td>
-                                        {{ user.mobile_number }}
-                                    </td>
-
-                                    <td>
-                                        {{ user.department }}
-                                    </td>
-
-                                    <td>
-
-                                        {% if user.is_active %}
-
-                                            <span class="badge bg-soft-success text-success">
-                                                Active
-                                            </span>
-
-                                        {% else %}
-
-                                            <span class="badge bg-soft-danger text-danger">
-                                                Inactive
-                                            </span>
-
-                                        {% endif %}
-
-                                    </td>
-
-                                    <td>
-                                        <div class="hstack gap-2 justify-content-end">
-                                            <a href="{% url 'accounts:user_view' user.id %}" class="avatar-text avatar-md">
-                                                <i class="feather feather-eye"></i>
-                                            </a>
-                                            <div class="dropdown">
-                                                <a href="javascript:void(0)" class="avatar-text avatar-md" data-bs-toggle="dropdown" data-bs-offset="0,21">
-                                                    <i class="feather feather-more-horizontal"></i>
-                                                </a>
-                                                <ul class="dropdown-menu">
-                                                    <li>
-                                                        <a class="dropdown-item" href="{% url 'accounts:user_edit' user.id %}">
-                                                            <i class="feather feather-edit-3 me-3"></i>
-                                                            <span>Edit</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="javascript:void(0)">
-                                                            <i class="feather feather-trash-2 me-3"></i>
-                                                            <span>Delete</span>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                </tr>
-
-                                {% empty %}
-
-                                <tr>
-                                    <td colspan="8" class="text-center">
-                                        No Users Found
-                                    </td>
-                                </tr>
-
-                                {% endfor %}
-
-                                </tbody>
-                        </table>
-                    </div>
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm user-table-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="wd-30">#</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="hstack gap-3">
+                                        <div class="avatar-image border-0 user-avatar">
+                                            {% if user.profile_image %}
+                                                <img src="{{ user.profile_image.url }}" alt="{{ user.full_name|default:user.username }}" class="img-fluid">
+                                            {% else %}
+                                                <img src="{% static 'images/avatar/1.png' %}" alt="User avatar placeholder" class="img-fluid">
+                                            {% endif %}
+                                        </div>
+                                        <div class="user-meta">
+                                            <div class="fw-semibold text-dark">{{ user.full_name|default:user.username }}</div>
+                                            <div class="fs-12 text-muted">{{ user.employee_code|default:"-" }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.mobile_number|default:"-" }}</td>
+                                <td>{{ user.department|default:"-" }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-soft-success text-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-soft-danger text-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="hstack gap-2 justify-content-end">
+                                        <a href="{% url 'accounts:user_view' user.pk %}" class="btn btn-sm btn-light-brand">
+                                            <i class="feather-eye me-1"></i>
+                                            View
+                                        </a>
+                                        <div class="dropdown">
+                                            <a href="javascript:void(0)" class="avatar-text avatar-md actions-toggle" data-bs-toggle="dropdown" data-bs-offset="0,21">
+                                                <i class="feather feather-more-horizontal"></i>
+                                            </a>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'accounts:user_edit' user.pk %}">
+                                                        <i class="feather feather-edit-3 me-3"></i>
+                                                        <span>Edit</span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <form method="post"
+                                                        action="{% url 'accounts:user_delete' user.pk %}"
+                                                        onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="feather feather-trash-2 me-3"></i>
+                                                            <span>Delete</span>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="fs-14 fw-semibold text-dark mb-2">No users yet</div>
+                                    <p class="text-muted mb-3">Create the first user to see it listed here.</p>
+                                    <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
+                                        <i class="feather-plus me-2"></i>
+                                        <span>Create User</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
-<!-- [ Main Content ] end -->
+</div>
 {% endblock %}
-        
