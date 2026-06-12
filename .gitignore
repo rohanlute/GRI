@@ -1,13 +1,89 @@
-# Virtual Environment
-venv/
-env/
+# =========================
+# Node artifacts
+# =========================
+node_modules/
+dist/
 
+# =========================
+# Java
+# =========================
+*.class
+*.jar
+*.war
+
+# =========================
 # Python
+# =========================
+*.py[cod]
 __pycache__/
-*.pyc
 
-# Django
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Maven
+# =========================
+target/
+
+# =========================
+# IDEs
+# =========================
+.idea/
+.vscode/
+
+# =========================
+# Unit test reports
+# =========================
+TEST*.xml
+
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Applications
+# =========================
+*.app
+*.exe
+
+# =========================
+# Large media files
+# =========================
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+
+# =========================
+# Databases
+# =========================
+*.sqlite3
 db.sqlite3
+
+# =========================
+# Virtual environments
+# =========================
+myenv/
+venv/
+.env/
+.venv/
+
+# =========================
+# Django
+# =========================
+**/migrations/
+!**/migrations/__init__.py
+##
+#####add 
+#ehs360_project/settings.py
+ehs360_project/settings.py
+
 media/
 
 # Environment Variables

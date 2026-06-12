@@ -23,6 +23,17 @@ class User(AbstractUser):
         null=True
     )
 
+    designation = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    about = models.TextField(
+        blank=True,
+        null=True
+    )
+
     company = models.ForeignKey(
         'companies.Company',
         on_delete=models.SET_NULL,

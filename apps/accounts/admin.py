@@ -31,9 +31,12 @@ class CustomUserAdmin(UserAdmin):
             {
                 'fields': (
                     'employee_code',
+                    'full_name',
                     'role',
                     'company',
                     'mobile_number',
+                    'designation',
+                    'about',
                     'profile_image',
                     'is_company_user'
                 )

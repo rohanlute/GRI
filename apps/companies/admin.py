@@ -8,8 +8,9 @@ class CompanyAdmin(admin.ModelAdmin):
     list_display = (
         'company_code',
         'company_name',
-        'contact_person',
         'email',
+        'mobile_number',
+        'gst_number',
         'is_active'
     )
 
