@@ -25,9 +25,12 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
+            'full_name',
             'email',
             'mobile_number',
             'employee_code',
+            'designation',
+            'about',
             'role',
             'company',
             'is_active'

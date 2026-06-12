@@ -1,51 +1,28 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const uploadBlocks = document.querySelectorAll(".company-create-form .file-upload");
 
-    const fileInput = document.querySelector(".file-upload");
+    uploadBlocks.forEach(function (fileInput) {
+        const container = fileInput.closest(".position-relative");
+        const previewImage = container ? container.querySelector(".upload-pic") : null;
+        const uploadButton = container ? container.querySelector(".upload-button") : null;
 
-    const previewImage = document.querySelector(".upload-pic");
+        if (previewImage) {
+            fileInput.addEventListener("change", function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
 
-    if (!fileInput || !previewImage) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
-    fileInput.addEventListener("change", function () {
-
-        const file = this.files[0];
-
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-
-            previewImage.src = e.target.result;
-
-        };
-
-        reader.readAsDataURL(file);
-
-    });
-
-});
-
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const uploadButton =
-        document.querySelector(".upload-button");
-
-    const fileInput =
-        document.querySelector(".file-upload");
-
-    if (uploadButton && fileInput) {
-
-        uploadButton.addEventListener(
-            "click",
-            function () {
-
+        if (uploadButton) {
+            uploadButton.addEventListener("click", function () {
                 fileInput.click();
-
-            }
-        );
-
-    }
-
+            });
+        }
+    });
 });
