@@ -1,24 +1,49 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% block title %}
-Dashboard
+{% block title %}{{ page_title|default:"Create User" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-create-form .upload-button {
+        opacity: 1 !important;
+        visibility: visible !important;
+        background-color: rgba(255, 255, 255, 0.78);
+        transition: all 0.3s ease;
+    }
+
+    .user-create-form .upload-button:hover {
+        opacity: 1 !important;
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .your-brand .file-upload {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <!-- [ page-header ] start -->
-<form method="POST" enctype="multipart/form-data" novalidate>
+<form method="POST" enctype="multipart/form-data" novalidate class="user-create-form">
 {% csrf_token %}
 <div class="page-header">
-    <div class="page-header-left d-flex align-items-center">
-        <div class="page-header-title">
-            <h5 class="m-b-10">InHouse-Employee</h5>
-        </div>
-        <ul class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            {% if object %}
-                <li class="breadcrumb-item">Edit</li>
-            {% else %}
-                <li class="breadcrumb-item">Create</li>
+        <div class="page-header-left d-flex align-items-center">
+            <div class="page-header-title">
+                <h5 class="m-b-10">{{ page_title|default:"Create User" }}</h5>
+            </div>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Home</a></li>
+                {% if object %}
+                    <li class="breadcrumb-item">Edit</li>
+                {% else %}
+                    <li class="breadcrumb-item">Create</li>
             {% endif %}
         </ul>
     </div>
@@ -33,7 +58,11 @@ Dashboard
             <div class="d-flex align-items-center gap-2 page-header-right-items-wrapper">
                 <button type="submit" class="btn btn-primary">
                     <i class="feather-layers me-2"></i>
+                    {% if object %}
+                    <span>Update User</span>
+                    {% else %}
                     <span>Save User</span>
+                    {% endif %}
                 </button>
             </div>
         </div>
@@ -77,18 +106,15 @@ Dashboard
                                     <div class="col-lg-8">
                                         <div class="mb-4 mb-md-0 d-flex gap-4 your-brand">
                                             <div class="wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded">
-                                                {% if object.profile_image %}
-                                                    <img src="{{ object.profile_image.url }}" class="upload-pic img-fluid rounded h-100 w-100">
+                                                {% if object and object.profile_image %}
+                                                    <img src="{{ object.profile_image.url }}" class="upload-pic img-fluid rounded h-100 w-100" alt="Profile Image">
                                                 {% else %}
-                                                    <img src="{% static 'images/avatar/1.png' %}" class="upload-pic img-fluid rounded h-100 w-100">
+                                                    <img src="{% static 'images/company-logo-placeholder.svg' %}" class="upload-pic img-fluid rounded h-100 w-100" alt="Default profile image">
                                                 {% endif %}
-                                                <div class="position-absolute start-50 top-50 end-0 bottom-0 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
-                                                    <i class="feather feather-camera" aria-hidden="true"></i>
-                                                </div>
                                                 <input name="profile_image" class="file-upload" type="file" accept="image/*">
                                             </div>
                                             <div class="d-flex flex-column gap-1">
-                                                <div class="fs-11 text-gray-500 mt-2"># Upload your prifile</div>
+                                                <div class="fs-11 text-gray-500 mt-2"># Upload your profile image</div>
                                                 <div class="fs-11 text-gray-500"># Avatar size 150x150</div>
                                                 <div class="fs-11 text-gray-500"># Max upload size 2mb</div>
                                                 <div class="fs-11 text-gray-500"># Allowed file types: png, jpg, jpeg</div>
@@ -179,10 +205,16 @@ Dashboard
                             <div class="card-body pass-info">
                                 <div class="mb-4 d-flex align-items-center justify-content-between">
                                     <h5 class="fw-bold mb-0 me-4">
-                                        <span class="d-block mb-2">Password Information:</span>
-                                        <span class="fs-12 fw-normal text-muted text-truncate-1-line">You can only change your password twice within 24 hours! </span>
+                                        <span class="d-block mb-2">Password Information{% if object %} (Optional){% endif %}:</span>
+                                        <span class="fs-12 fw-normal text-muted text-truncate-1-line">
+                                            {% if object %}
+                                                Leave blank to keep the current password.
+                                            {% else %}
+                                                You can only change your password twice within 24 hours!
+                                            {% endif %}
+                                        </span>
                                     </h5>
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-light-brand">Reset</a>
+                                    <!-- <a href="javascript:void(0);" class="btn btn-sm btn-light-brand">Reset</a> -->
                                 </div>
                                 <div class="row mb-4 align-items-center">
                                     <div class="col-lg-4">
@@ -191,7 +223,8 @@ Dashboard
                                     <div class="col-lg-8">
                                         <div class="input-group">
                                             <div class="input-group-text"><i class="feather-key"></i></div>
-                                            <input name="password" type="password" class="form-control" id="Input" placeholder="Password" required>
+                                            <input name="password" type="password" class="form-control" id="Input" placeholder="{% if object %}Leave blank to keep current password{% else %}Password{% endif %}" {% if not object %}required{% endif %}>
+                                            <div class="input-group-text border-start bg-gray-2 c-pointer show-pass" data-target="passwordInput"> <i class="feather-eye"></i> </div>
                                         </div>
                                     </div>
                                 </div>
@@ -202,9 +235,8 @@ Dashboard
                                     <div class="col-lg-8 generate-pass">
                                         <div class="input-group field">
                                             <div class="input-group-text"><i class="feather-key"></i></div>
-                                            <input name="confirm_password" type="password" class="form-control password" id="newPassword" placeholder="Password Confirm" required>
-                                            <div class="input-group-text c-pointer gen-pass"><i class="feather-hash"></i></div>
-                                            <div class="input-group-text border-start bg-gray-2 c-pointer show-pass"><i></i></div>
+                                            <input name="confirm_password" type="password" class="form-control password" id="newPassword" placeholder="{% if object %}Leave blank to keep current password{% else %}Password Confirm{% endif %}" {% if not object %}required{% endif %}>
+                                            <div class="input-group-text border-start bg-gray-2 c-pointer show-pass" data-target="confirmPasswordInput"> <i class="feather-eye"></i> </div>
                                         </div>
                                         <div class="progress-bar mt-2">
                                             <div></div>
@@ -231,4 +263,47 @@ Dashboard
 </div>
  </form>
 <!-- [ Main Content ] end -->
+ <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const fileInput = document.querySelector('.file-upload');
+    const previewImg = document.querySelector('.upload-pic');
+
+    if (fileInput && previewImg) {
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function (event) {
+                    previewImg.src = event.target.result;
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+document.addEventListener('DOMContentLoaded', function () {
+
+    document.querySelectorAll('.show-pass').forEach(function(btn) {
+
+        btn.addEventListener('click', function() {
+
+            const field = this.closest('.input-group')
+                              .querySelector('input');
+
+            if (field.type === 'password') {
+                field.type = 'text';
+                this.innerHTML = '<i class="feather-eye-off"></i>';
+            } else {
+                field.type = 'password';
+                this.innerHTML = '<i class="feather-eye"></i>';
+            }
+        });
+
+    });
+
+});
+</script>
 {% endblock %}

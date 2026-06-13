@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views import View
@@ -7,6 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .mixins import SuperAdminRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import (ListView,CreateView,UpdateView,DetailView)
+from django.db import transaction
+from django.db.models import Q
 from .forms import UserCreateForm
 from .models import User
 from apps.accounts.models import Role
@@ -90,7 +92,34 @@ class UserListView(LoginRequiredMixin,SuperAdminRequiredMixin,ListView):
 
     def get_queryset(self):
 
-        return User.objects.select_related('role','company').filter(role__role_code='SUPERADMIN').order_by('-id')
+        queryset = User.objects.select_related('role', 'company').filter(
+            role__role_code='SUPERADMIN'
+        ).order_by('-id')
+
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(full_name__icontains=search) |
+                Q(username__icontains=search) |
+                Q(email__icontains=search) |
+                Q(mobile_number__icontains=search) |
+                Q(employee_code__icontains=search) |
+                Q(department__icontains=search) |
+                Q(company__company_name__icontains=search)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        users = context.get('users')
+
+        if users is not None and hasattr(users, 'count'):
+            context['total_users_count'] = users.count()
+            context['active_users_count'] = users.filter(is_active=True).count()
+
+        return context
 
 # ============= USER LIST =======================
 
@@ -117,7 +146,18 @@ class UserCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,CreateView):
 
         role = Role.objects.get(role_code='SUPERADMIN')
 
-        company = Company.objects.get(company_code='PROTEGK')
+        company_name = (self.request.POST.get('companyname') or '').strip()
+        company = Company.objects.filter(
+            Q(company_code__iexact=company_name) |
+            Q(company_name__iexact=company_name)
+        ).first()
+
+        if company is None:
+            company = Company.objects.order_by('id').first()
+
+        if company is None:
+            form.add_error(None, 'Please create a company before creating a user.')
+            return self.form_invalid(form)
 
         user.role = role
 
@@ -161,6 +201,27 @@ class UserUpdateView(LoginRequiredMixin,SuperAdminRequiredMixin,UpdateView):
 
         return context
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['password'].required = False
+        form.fields['confirm_password'].required = False
+        return form
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            user = form.save(commit=False)
+
+            if self.request.FILES.get('profile_image'):
+                user.profile_image = self.request.FILES.get('profile_image')
+
+            password = (form.cleaned_data.get('password') or '').strip()
+            if password:
+                user.set_password(password)
+
+            user.save()
+
+        messages.success(self.request, 'User updated successfully.')
+        return redirect(self.success_url)
 
 
 class UserDetailView(LoginRequiredMixin,SuperAdminRequiredMixin,DetailView):
@@ -170,6 +231,15 @@ class UserDetailView(LoginRequiredMixin,SuperAdminRequiredMixin,DetailView):
     template_name = ('accounts/user_management/user_view.html')
 
     context_object_name = 'user_obj'
+
+class UserDeleteView(LoginRequiredMixin,SuperAdminRequiredMixin,View):
+    login_url = 'accounts:login'
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user.delete()
+        messages.success(request, 'User deleted successfully.')
+        return redirect('accounts:user_list')
+    
 # -----------------------------------------------
 # ============= Department =======================
 # -----------------------------------------------
