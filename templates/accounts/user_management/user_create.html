@@ -179,6 +179,53 @@
                                 </div>
                                 <div class="row mb-4 align-items-center">
                                     <div class="col-lg-4">
+                                        <label for="{{ form.role.id_for_label }}" class="fw-semibold">Role: <span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <div class="input-group">
+                                            <div class="input-group-text"><i class="feather-shield"></i></div>
+                                            {{ form.role }}
+                                        </div>
+                                        {% if form.role.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.role.errors|striptags }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-lg-4">
+                                        <label for="{{ form.designation.id_for_label }}" class="fw-semibold">Designation: </label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <div class="input-group">
+                                            <div class="input-group-text"><i class="feather-briefcase"></i></div>
+                                            {{ form.designation }}
+                                        </div>
+                                        {% if form.designation.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.designation.errors|striptags }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-lg-4">
+                                        <label for="{{ form.is_active.id_for_label }}" class="fw-semibold">Account Status: </label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                                            {{ form.is_active }}
+                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                {% if form.is_active.value %}Active{% else %}Inactive{% endif %}
+                                            </label>
+                                        </div>
+                                        <div class="fs-12 text-muted mt-1">
+                                            Active users can log in. Inactive users are blocked from logging in.
+                                        </div>
+                                        {% if form.is_active.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.is_active.errors|striptags }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mb-4 align-items-center">
+                                    <div class="col-lg-4">
                                         <label for="departmentInput" class="fw-semibold">Department: </label>
                                     </div>
                                     <div class="col-lg-8">
@@ -282,6 +329,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 reader.readAsDataURL(file);
             }
         });
+    }
+});
+document.addEventListener('DOMContentLoaded', function () {
+    const activeToggle = document.querySelector('input[name="is_active"]');
+    const activeLabel = activeToggle ? activeToggle.closest('.form-check')?.querySelector('.form-check-label') : null;
+
+    if (activeToggle && activeLabel) {
+        const syncActiveLabel = function () {
+            activeLabel.textContent = activeToggle.checked ? 'Active' : 'Inactive';
+        };
+
+        syncActiveLabel();
+        activeToggle.addEventListener('change', syncActiveLabel);
     }
 });
 document.addEventListener('DOMContentLoaded', function () {

@@ -11,7 +11,6 @@ from django.db import transaction
 from django.db.models import Q
 from .forms import UserCreateForm
 from .models import User
-from apps.accounts.models import Role
 from apps.companies.models import Company
 
 
@@ -28,15 +27,30 @@ class LoginView(View):
 
     def post(self, request):
 
-        username = request.POST.get('username')
+        username = (request.POST.get('username') or '').strip()
         password = request.POST.get('password')
 
         user = authenticate(request,username=username,password=password)
         if user:
+            if not user.is_active:
+                messages.error(
+                    request,
+                    'This account is inactive. Please contact the administrator.'
+                )
+                return render(request, self.template_name)
+
             login(request,user)
             user.is_online = True
             user.save()
             return redirect('accounts:dashboard')
+
+        inactive_user = User.objects.filter(username=username).only('is_active').first()
+        if inactive_user and not inactive_user.is_active:
+            messages.error(
+                request,
+                'This account is inactive. Please contact the administrator.'
+            )
+            return render(request, self.template_name)
 
         messages.error(request,'Invalid Username or Password')
 
@@ -92,9 +106,7 @@ class UserListView(LoginRequiredMixin,SuperAdminRequiredMixin,ListView):
 
     def get_queryset(self):
 
-        queryset = User.objects.select_related('role', 'company').filter(
-            role__role_code='SUPERADMIN'
-        ).order_by('-id')
+        queryset = User.objects.select_related('role', 'company').order_by('-id')
 
         search = self.request.GET.get('search', '').strip()
         if search:
@@ -133,6 +145,11 @@ class UserCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,CreateView):
 
     success_url = reverse_lazy('accounts:user_list')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['is_active'].initial = False
+        return form
+
     
 
     def form_valid(self, form):
@@ -143,8 +160,6 @@ class UserCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,CreateView):
             user.profile_image = self.request.FILES.get('profile_image')
 
         user.set_password(form.cleaned_data['password'])
-
-        role = Role.objects.get(role_code='SUPERADMIN')
 
         company_name = (self.request.POST.get('companyname') or '').strip()
         company = Company.objects.filter(
@@ -158,8 +173,6 @@ class UserCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,CreateView):
         if company is None:
             form.add_error(None, 'Please create a company before creating a user.')
             return self.form_invalid(form)
-
-        user.role = role
 
         user.company = company
 
