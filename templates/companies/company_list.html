@@ -60,8 +60,15 @@
         height: 32px;
     }
 
-    .company-list-page .dropdown-menu {
-        z-index: 1060;
+    .company-table-card,
+    .company-table-card .card-body,
+    .company-table-card .table-responsive {
+        overflow: visible !important;
+    }
+
+
+    .company-list-page .table-responsive {
+        overflow: visible !important;
     }
 </style>
 {% endblock %}
@@ -165,7 +172,7 @@
         </div>
     {% endif %}
 
-    <div class="card stretch stretch-full border-0 shadow-sm">
+    <div class="card stretch stretch-full border-0 shadow-sm company-table-card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -218,10 +225,13 @@
                                             View
                                         </a>
                                         <div class="dropdown">
-                                            <a href="javascript:void(0)" class="avatar-text avatar-md" data-bs-toggle="dropdown" data-bs-offset="0,21">
-                                                <i class="feather feather-more-horizontal"></i>
+                                            <a href="javascript:void(0)"
+                                                class="avatar-text avatar-md actions-toggle"
+                                                data-bs-toggle="dropdown"
+                                                data-bs-display="static">
+                                                    <i class="feather feather-more-horizontal"></i>
                                             </a>
-                                            <ul class="dropdown-menu">
+                                            <ul class="dropdown-menu dropdown-menu-end">
                                                 <li>
                                                     <a class="dropdown-item" href="{% url 'companies:company_edit' company.pk %}">
                                                         <i class="feather feather-edit-3 me-3"></i>
