@@ -1,7 +1,70 @@
 {% extends 'base/base.html' %}
 {% load static %}
 {% block title %}Company List{% endblock %}
+{% block extra_css %}
+<style>
+    .company-list-page .page-header-right-items-wrapper {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
 
+    .company-list-page .search-form {
+        min-width: 280px;
+    }
+
+    .company-list-page .search-form .input-group {
+        width: 100%;
+    }
+
+    .company-list-page .company-table-card {
+        border-radius: 18px;
+        overflow: visible;
+    }
+
+    .company-list-page .company-table-card .table-responsive {
+        overflow: visible;
+    }
+
+    .company-list-page .company-table-card table {
+        margin-bottom: 0;
+    }
+
+    .company-list-page .company-table-card thead th {
+        padding: 1rem 1.25rem;
+        white-space: nowrap;
+    }
+
+    .company-list-page .company-table-card tbody td {
+        padding: 1rem 1.25rem;
+        vertical-align: middle;
+    }
+
+    .company-list-page .company-avatar {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+    }
+
+    .company-list-page .company-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .company-list-page .company-meta {
+        line-height: 1.1;
+    }
+
+    .company-list-page .actions-toggle {
+        width: 32px;
+        height: 32px;
+    }
+
+    .company-list-page .dropdown-menu {
+        z-index: 1060;
+    }
+</style>
+{% endblock %}
 {% block content %}
 <!-- [ page-header ] start -->
 <div class="page-header">

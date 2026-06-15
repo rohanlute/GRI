@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.companies',
     'apps.chat',
+    'apps.brsr',
+    'apps.gri',
+    'apps.notifications',
+    'apps.timesheets',
 
     # 
     'rest_framework',
