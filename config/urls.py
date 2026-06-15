@@ -24,6 +24,10 @@ urlpatterns = [
     path('', include('apps.accounts.urls')),
     path('companies/',include('apps.companies.urls')),
     path('applications/', include('apps.chat.urls')),
+    path('notifications/', include('apps.notifications.urls')),
+    path('timesheets/', include('apps.timesheets.urls')),
+    path('brsr/', include('apps.brsr.urls')),
+    path('gri/', include('apps.gri.urls')),
 ]
 
 
