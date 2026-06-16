@@ -7,23 +7,28 @@ from django.utils.text import slugify
 from django.views.generic import CreateView, DetailView, ListView, UpdateView, DeleteView
 from django.views import View
 from apps.accounts.mixins import SuperAdminRequiredMixin
-from apps.accounts.models import Role, User
+from apps.accounts.models import *
 from .forms import CompanyForm
-from .models import Company
+from .models import *
 from django.db.models import Q
 
 
 # -----------------------------------------------
 # ============= Company Management - Admin =======================
 # -----------------------------------------------
-class CompanyListView(LoginRequiredMixin, SuperAdminRequiredMixin, ListView):
+class CompanyListView(LoginRequiredMixin, ListView):
     model = Company
     template_name = 'companies/company_list.html'
     context_object_name = 'companies'
     login_url = 'accounts:login'
-    
+
     def get_queryset(self):
-        queryset = Company.objects.order_by('-created_at')
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Company.objects.order_by('-created_at')
+        else:
+            queryset = Company.objects.filter(id=user.company_id).order_by('-created_at')
+
         search = self.request.GET.get('search', '').strip()
         if search:
             queryset = queryset.filter(
@@ -36,16 +41,22 @@ class CompanyListView(LoginRequiredMixin, SuperAdminRequiredMixin, ListView):
         
         return queryset
 
-
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['active_companies_count'] = self.get_queryset().filter(is_active=True).count()
+
+        if self.request.user.is_superuser:
+            context['active_companies_count'] = Company.objects.filter(is_active=True).count()
+        else:
+            context['active_companies_count'] = Company.objects.filter(
+                id=self.request.user.company_id,
+                is_active=True
+            ).count()
+
         return context
 
 
 # ============= Company Management - Create =======================
-class CompanyCreateView(LoginRequiredMixin, SuperAdminRequiredMixin, CreateView):
+class CompanyCreateView(LoginRequiredMixin, CreateView):
     model = Company
     form_class = CompanyForm
     template_name = 'companies/company_create.html'
@@ -173,13 +184,13 @@ class CompanyCreateView(LoginRequiredMixin, SuperAdminRequiredMixin, CreateView)
 
 
 # ============= Company Management - View =======================
-class CompanyDetailView(LoginRequiredMixin, SuperAdminRequiredMixin, DetailView):
+class CompanyDetailView(LoginRequiredMixin, DetailView):
     model = Company
     template_name = 'companies/company_view.html'
     context_object_name = 'company'
     login_url = 'accounts:login'
 
-class CompanyUpdateView(LoginRequiredMixin, SuperAdminRequiredMixin, UpdateView):
+class CompanyUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'companies/company_edit.html'
     model = Company
     form_class = CompanyForm
@@ -247,7 +258,7 @@ class CompanyUpdateView(LoginRequiredMixin, SuperAdminRequiredMixin, UpdateView)
             messages.success(self.request, 'Company and company admin updated successfully.')
             return redirect(self.get_success_url())
 
-class CompanyDeleteView(LoginRequiredMixin,SuperAdminRequiredMixin,View):
+class CompanyDeleteView(LoginRequiredMixin, View):
     login_url = 'accounts:login'
     def post(self, request, pk):
         company = get_object_or_404(Company, pk=pk)

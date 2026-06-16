@@ -1,5 +1,7 @@
 from django import forms
+
 from .models import User, Role
+from apps.accounts.models.permission import Permissions
 
 
 class UserCreateForm(forms.ModelForm):
@@ -61,3 +63,52 @@ class UserCreateForm(forms.ModelForm):
             )
 
         return cleaned_data
+
+class RolePermissionForm(forms.ModelForm):
+
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permissions.objects.order_by('display_order', 'name'),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(
+            attrs={
+                'class': 'form-check-input',
+            }
+        ),
+    )
+
+    class Meta:
+        model = Role
+
+        fields = [
+            'role_code',
+            'role_name',
+            'description',
+            'is_active',
+            'permissions',
+        ]
+        widgets = {
+            'role_code': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Role code',
+                }
+            ),
+            'role_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Role name',
+                }
+            ),
+            'description': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 4,
+                    'placeholder': 'Short role description',
+                }
+            ),
+            'is_active': forms.CheckboxInput(
+                attrs={
+                    'class': 'form-check-input',
+                }
+            ),
+        }

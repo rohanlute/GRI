@@ -1,4 +1,5 @@
 from django.db import models
+from apps.accounts.models.permission import Permissions
 
 
 class Role(models.Model):
@@ -20,6 +21,12 @@ class Role(models.Model):
 
     is_active = models.BooleanField(
         default=True
+    )
+
+    permissions = models.ManyToManyField(
+        Permissions,
+        related_name='roles',
+        blank=True
     )
 
     created_at = models.DateTimeField(

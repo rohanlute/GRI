@@ -1,4 +1,5 @@
 {% load static %}
+{% load permission_tags  %}
 <!--! ================================================================ !-->
 <!--! [Start] Navigation Manu !-->
 <!--! ================================================================ !-->
@@ -26,8 +27,7 @@
                         <li class="nxl-item"><a class="nxl-link" href="analytics.html">Analytics</a></li>
                     </ul>
                 </li>
-
-                {% if request.user.is_super_admin %}
+                {% if request.user|has_perm:'ACCESS_COMPANY_MODULE' %}
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon"><i class="feather-briefcase"></i></span>
@@ -38,21 +38,21 @@
                     </ul>
                 </li>
                 {% endif %}
-                {% if request.user.is_super_admin %}
+                {% if request.user|has_perm:'ACCESS_ORGANIZATIONS_MODULE' %}
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon"><i class="feather-users"></i></span>
                         <span class="nxl-mtext">Organization Setup</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                     </a>
                     <ul class="nxl-submenu">
-                        <li class="nxl-item"><a class="nxl-link" href="{% url 'accounts:user_list' %}">User Management</a></li>
+                        {% if request.user|has_perm:'ACCESS_USER_MODULE' %}<li class="nxl-item"><a class="nxl-link" href="{% url 'accounts:user_list' %}">User Management</a></li>{% endif %}
+                        {% if request.user.is_super_admin or request.user.is_superuser or request.user.role and request.user.role.role_code == 'ADMIN' %}<li class="nxl-item"><a class="nxl-link" href="{% url 'accounts:role_list' %}">Role &amp; Permission</a></li>{% endif %}
                         <li class="nxl-item"><a class="nxl-link" href="{% url 'accounts:department_list' %}">Department's</a></li>
                         <li class="nxl-item"><a class="nxl-link" href="">Plants Management</a></li>
                         <li class="nxl-item"><a class="nxl-link" href="analytics.html">Analytics</a></li>
                     </ul>
                 </li>
                 {% endif %}
-                {% if request.user.is_super_admin %}
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon"><i class="feather-send"></i></span>
@@ -62,7 +62,6 @@
                         <li class="nxl-item"><a class="nxl-link" href="{% url 'chat:chat' %}">Chat</a></li>
                     </ul>
                 </li>
-                {% endif %}
                 <!-- <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
                         <span class="nxl-micon"><i class="feather-cast"></i></span>

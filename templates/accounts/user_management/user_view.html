@@ -1,5 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block title %}User Detail{% endblock %}
 
 {% block extra_css %}
@@ -43,9 +44,11 @@
                     <i class="feather-arrow-left me-2"></i>Back
                 </a>
 
+                {% if request.user|has_perm:'EDIT_USER' %}
                 <a href="{% url 'accounts:user_edit' user_obj.id %}" class="btn btn-primary">
                     <i class="feather-edit me-2"></i>Edit Profile
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,5 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block title %}Company Detail{% endblock %}
 
 {% block content %}
@@ -20,10 +21,12 @@
                     <i class="feather-arrow-left me-2"></i>
                     <span>Back to List</span>
                 </a>
+                {% if request.user.is_super_admin %}
                 <a href="{% url 'companies:company_create' %}" class="btn btn-primary">
                     <i class="feather-plus me-2"></i>
                     <span>Add Company</span>
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>

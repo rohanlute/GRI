@@ -1,0 +1,143 @@
+<div class="card border-0 shadow-sm role-card">
+    <div class="card-header bg-white border-0 py-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h5 class="mb-1 fw-bold">{{ form_title }}</h5>
+                <div class="text-muted fs-12">{{ form_description }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-light-brand btn-sm" id="selectAllPermissions">
+                    Select All
+                </button>
+                <button type="button" class="btn btn-light-danger btn-sm" id="deselectAllPermissions">
+                    Deselect All
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors|striptags }}
+            </div>
+        {% endif %}
+        <div class="row g-4">
+            <div class="col-xl-5">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="{{ form.role_code.id_for_label }}" class="fw-semibold mb-2">Role Code <span class="text-danger">*</span></label>
+                        {{ form.role_code }}
+                        {% if form.role_code.errors %}
+                            <div class="invalid-feedback d-block">{{ form.role_code.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.role_name.id_for_label }}" class="fw-semibold mb-2">Role Name <span class="text-danger">*</span></label>
+                        {{ form.role_name }}
+                        {% if form.role_name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.role_name.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.description.id_for_label }}" class="fw-semibold mb-2">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-light">
+                            <div>
+                                <div class="fw-semibold">Status</div>
+                                <div class="text-muted fs-12">Inactive roles stay saved but can be hidden from workflows.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label ms-2" for="{{ form.is_active.id_for_label }}">
+                                    {% if form.is_active.value %}Active{% else %}Inactive{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        {% if form.is_active.errors %}
+                            <div class="invalid-feedback d-block">{{ form.is_active.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div class="permission-panel p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h6 class="mb-1 fw-bold">Permissions</h6>
+                            <div class="text-muted fs-12">Choose the access that should be granted to this role.</div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary">{{ role_permissions|length }} permissions</span>
+                    </div>
+                    <div class="permission-list pe-1">
+                        {% for permission in role_permissions %}
+                            <label class="permission-item d-flex align-items-start gap-3 mb-0" for="permission_{{ permission.pk }}">
+                                <div class="form-check mb-0">
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input"
+                                        id="permission_{{ permission.pk }}"
+                                        name="permissions"
+                                        value="{{ permission.pk }}"
+                                        {% if permission.pk in selected_permission_ids %}checked{% endif %}>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ permission.name }}</div>
+                                    <div class="permission-code text-muted">{{ permission.code }}</div>
+                                </div>
+                                <span class="badge bg-light text-muted border">{{ permission.permission_type }}</span>
+                            </label>
+                        {% empty %}
+                            <div class="text-center py-5">
+                                <div class="fw-semibold mb-2">No permissions found</div>
+                                <div class="text-muted fs-12">Run the permission seeder before creating roles.</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.permissions.errors %}
+                        <div class="invalid-feedback d-block mt-2">{{ form.permissions.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectAllBtn = document.getElementById('selectAllPermissions');
+    const deselectAllBtn = document.getElementById('deselectAllPermissions');
+    const permissionChecks = Array.from(document.querySelectorAll('input[name="permissions"]'));
+    const statusToggle = document.querySelector('input[name="is_active"]');
+    const statusLabel = statusToggle ? statusToggle.closest('.form-check').querySelector('.form-check-label') : null;
+
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function () {
+            permissionChecks.forEach(function (checkbox) {
+                checkbox.checked = true;
+            });
+        });
+    }
+
+    if (deselectAllBtn) {
+        deselectAllBtn.addEventListener('click', function () {
+            permissionChecks.forEach(function (checkbox) {
+                checkbox.checked = false;
+            });
+        });
+    }
+
+    if (statusToggle && statusLabel) {
+        const syncStatusLabel = function () {
+            statusLabel.textContent = statusToggle.checked ? 'Active' : 'Inactive';
+        };
+
+        syncStatusLabel();
+        statusToggle.addEventListener('change', syncStatusLabel);
+    }
+});
+</script>

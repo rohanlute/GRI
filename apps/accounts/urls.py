@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     LoginView,LogoutView,DashboardView,UserListView,
     UserCreateView,DepartmentListView,DepartmentCreateView,UserUpdateView,
-    UserDetailView, UserDeleteView,
+    UserDetailView, UserDeleteView, RoleListView, RoleCreateView, RoleUpdateView,
 )
 
 app_name = 'accounts'
@@ -35,6 +35,18 @@ urlpatterns = [
     path('user_view/<int:pk>/',UserDetailView.as_view(),name='user_view'),
 
     path('user_delete/<int:pk>/',UserDeleteView.as_view(),name='user_delete'),
+
+    # -----------------------------------------------
+    # ============= Role & Permission ===============
+    # -----------------------------------------------
+
+    path('role-list/', RoleListView.as_view(), name='role_list'),
+
+    path('createrole/', RoleCreateView.as_view(), name='role_create'),
+
+    path('editrole/<int:pk>/', RoleUpdateView.as_view(), name='role_edit'),
+
+    path('createrole/<int:pk>/', RoleUpdateView.as_view(), name='role_edit_legacy'),
 
     # -----------------------------------------------
     # ============= Department =======================

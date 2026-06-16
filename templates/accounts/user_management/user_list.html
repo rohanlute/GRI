@@ -1,5 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
+{% load permission_tags %}
 {% block title %}User List{% endblock %}
 
 {% block extra_css %}
@@ -104,10 +105,12 @@
                     <i class="feather-x me-1"></i> Clear
                 </a>
                 {% endif %}
+                {% if request.user|has_perm:'CREATE_USER' %}
                 <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
                     <i class="feather-plus me-2"></i>
                     <span>Create User</span>
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -214,21 +217,26 @@
                                 </td>
                                 <td class="text-end">
                                     <div class="hstack gap-2 justify-content-end">
+                                        {% if request.user|has_perm:'VIEW_USER' %}
                                         <a href="{% url 'accounts:user_view' user.pk %}" class="btn btn-sm btn-light-brand">
                                             <i class="feather-eye me-1"></i>
                                             View
                                         </a>
+                                        {% endif %}
                                         <div class="dropdown">
                                             <a href="javascript:void(0)" class="avatar-text avatar-md actions-toggle" data-bs-toggle="dropdown" data-bs-offset="0,21">
                                                 <i class="feather feather-more-horizontal"></i>
                                             </a>
                                             <ul class="dropdown-menu dropdown-menu-end">
+                                                {% if request.user|has_perm:'EDIT_USER' %}
                                                 <li>
                                                     <a class="dropdown-item" href="{% url 'accounts:user_edit' user.pk %}">
                                                         <i class="feather feather-edit-3 me-3"></i>
                                                         <span>Edit</span>
                                                     </a>
                                                 </li>
+                                                {% endif %}
+                                                {% if request.user|has_perm:'DELETE_USER' %}
                                                 <li>
                                                     <form method="post"
                                                         action="{% url 'accounts:user_delete' user.pk %}"
@@ -240,6 +248,7 @@
                                                         </button>
                                                     </form>
                                                 </li>
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </div>
@@ -250,10 +259,12 @@
                                 <td colspan="8" class="text-center py-5">
                                     <div class="fs-14 fw-semibold text-dark mb-2">No users yet</div>
                                     <p class="text-muted mb-3">Create the first user to see it listed here.</p>
+                                    {% if request.user|has_perm:'CREATE_USER' %}
                                     <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
                                         <i class="feather-plus me-2"></i>
                                         <span>Create User</span>
                                     </a>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

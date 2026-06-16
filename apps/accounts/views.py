@@ -4,13 +4,14 @@ from django.contrib import messages
 from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .mixins import SuperAdminRequiredMixin
+from .mixins import *
 from django.urls import reverse_lazy
 from django.views.generic import (ListView,CreateView,UpdateView,DetailView)
 from django.db import transaction
 from django.db.models import Q
-from .forms import UserCreateForm
-from .models import User
+from .forms import UserCreateForm, RolePermissionForm
+from .models import User, Role
+from apps.accounts.models.permission import Permissions
 from apps.companies.models import Company
 
 
@@ -96,7 +97,7 @@ class DashboardView(LoginRequiredMixin,TemplateView):
 # ============= USER LIST =======================
 # -----------------------------------------------
 
-class UserListView(LoginRequiredMixin,SuperAdminRequiredMixin,ListView):
+class UserListView(LoginRequiredMixin, ListView):
 
     model = User
 
@@ -105,8 +106,10 @@ class UserListView(LoginRequiredMixin,SuperAdminRequiredMixin,ListView):
     context_object_name = 'users'
 
     def get_queryset(self):
-
+        user = self.request.user
         queryset = User.objects.select_related('role', 'company').order_by('-id')
+        if not user.is_super_admin:
+            queryset = queryset.filter(company=user.company)
 
         search = self.request.GET.get('search', '').strip()
         if search:
@@ -125,17 +128,16 @@ class UserListView(LoginRequiredMixin,SuperAdminRequiredMixin,ListView):
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
-        users = context.get('users')
+        users = context['users']
 
-        if users is not None and hasattr(users, 'count'):
-            context['total_users_count'] = users.count()
-            context['active_users_count'] = users.filter(is_active=True).count()
+        context['total_users_count'] = users.count()
+        context['active_users_count'] = users.filter(is_active=True).count()
 
         return context
 
 # ============= USER LIST =======================
 
-class UserCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,CreateView):
+class UserCreateView(LoginRequiredMixin, CreateView):
 
     model = User
 
@@ -196,7 +198,7 @@ class UserCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,CreateView):
         return super().form_invalid(form)
     
 
-class UserUpdateView(LoginRequiredMixin,SuperAdminRequiredMixin,UpdateView):
+class UserUpdateView(LoginRequiredMixin, UpdateView):
 
     model = User
 
@@ -237,7 +239,7 @@ class UserUpdateView(LoginRequiredMixin,SuperAdminRequiredMixin,UpdateView):
         return redirect(self.success_url)
 
 
-class UserDetailView(LoginRequiredMixin,SuperAdminRequiredMixin,DetailView):
+class UserDetailView(LoginRequiredMixin, DetailView):
 
     model = User
 
@@ -245,26 +247,115 @@ class UserDetailView(LoginRequiredMixin,SuperAdminRequiredMixin,DetailView):
 
     context_object_name = 'user_obj'
 
-class UserDeleteView(LoginRequiredMixin,SuperAdminRequiredMixin,View):
+class UserDeleteView(LoginRequiredMixin, View):
     login_url = 'accounts:login'
     def post(self, request, pk):
         user = get_object_or_404(User, pk=pk)
         user.delete()
         messages.success(request, 'User deleted successfully.')
         return redirect('accounts:user_list')
+
+
+class RolePermissionContextMixin:
+    form_class = RolePermissionForm
+    role_template_name = None
+
+    def get_selected_permission_ids(self, role=None):
+        if self.request.method == 'POST':
+            return {
+                int(permission_id)
+                for permission_id in self.request.POST.getlist('permissions')
+                if str(permission_id).isdigit()
+            }
+
+        if role:
+            return set(role.permissions.values_list('pk', flat=True))
+
+        return set()
+
+    def get_role_form_context(self, form, role=None):
+        context = {
+            'form': form,
+            'page_title': 'Role & Permission',
+            'role_permissions': Permissions.objects.order_by('display_order', 'name'),
+            'selected_permission_ids': self.get_selected_permission_ids(role),
+            'is_edit': bool(role),
+        }
+
+        if role:
+            context['editing_role'] = role
+
+        return context
+
+    def form_valid(self, form):
+        role = form.save()
+        messages.success(self.request, f"Role '{role.role_name}' saved successfully.")
+        return redirect(self.get_success_url())
+
+
+class RoleListView(LoginRequiredMixin, ListView):
+    model = Role
+    template_name = 'accounts/user_management/role_list.html'
+    context_object_name = 'roles'
+
+    def get_queryset(self):
+        return Role.objects.prefetch_related('permissions').order_by('role_name')
+
+
+class RoleCreateView(RolePermissionContextMixin, LoginRequiredMixin, CreateView):
+    model = Role
+    form_class = RolePermissionForm
+
+    template_name = 'accounts/user_management/role_create.html'
+
+    success_url = reverse_lazy('accounts:role_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_role_form_context(context['form']))
+        return context
+
+    def form_valid(self, form):
+        role = form.save()
+        messages.success(self.request, f"Role '{role.role_name}' created successfully.")
+        return redirect(self.success_url)
+
+
+class RoleUpdateView(RolePermissionContextMixin, LoginRequiredMixin, UpdateView):
+
+    model = Role
+
+    form_class = RolePermissionForm
+
+    template_name = 'accounts/user_management/role_edit.html'
+
+    success_url = reverse_lazy('accounts:role_list')
+
+    def get_queryset(self):
+        return Role.objects.prefetch_related('permissions')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_role_form_context(context['form'], self.object))
+        return context
+
+    def form_valid(self, form):
+        role = form.save()
+        messages.success(self.request, f"Role '{role.role_name}' updated successfully.")
+        return redirect(self.success_url)
     
 # -----------------------------------------------
 # ============= Department =======================
 # -----------------------------------------------
 
-class DepartmentListView(LoginRequiredMixin,SuperAdminRequiredMixin,TemplateView):
+class DepartmentListView(LoginRequiredMixin, TemplateView):
 
     login_url = 'accounts:login'
 
     template_name = ('accounts/department/department_list.html')
 
 # ================= Department Create ==============
-class DepartmentCreateView(LoginRequiredMixin,SuperAdminRequiredMixin,TemplateView):
+class DepartmentCreateView(LoginRequiredMixin, TemplateView):
 
     login_url = 'accounts:login'
 
