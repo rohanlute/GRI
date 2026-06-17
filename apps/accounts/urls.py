@@ -2,7 +2,8 @@ from django.urls import path
 
 from .views import (
     LoginView,LogoutView,DashboardView,UserListView,
-    UserCreateView,DepartmentListView,DepartmentCreateView,UserUpdateView,
+    UserCreateView,DepartmentListView,DepartmentCreateView,DepartmentDetailView,
+    DepartmentUpdateView, DepartmentDeleteView,UserUpdateView,
     UserDetailView, UserDeleteView, RoleListView, RoleCreateView, RoleUpdateView,
 )
 
@@ -55,4 +56,10 @@ urlpatterns = [
     path('department_list/',DepartmentListView.as_view(),name='department_list'),
 
     path('department_create/',DepartmentCreateView.as_view(),name='department_create'),
+
+    path('department_view/<int:pk>/',DepartmentDetailView.as_view(),name='department_view'),
+
+    path('department_edit/<int:pk>/',DepartmentUpdateView.as_view(),name='department_edit'),
+
+    path('department_delete/<int:pk>/',DepartmentDeleteView.as_view(),name='department_delete'),
 ]

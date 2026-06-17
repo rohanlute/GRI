@@ -1,6 +1,5 @@
 from django import forms
-
-from .models import User, Role
+from .models import User, Role, Department
 from apps.accounts.models.permission import Permissions
 
 
@@ -13,6 +12,19 @@ class UserCreateForm(forms.ModelForm):
     role = forms.ModelChoiceField(
         queryset=Role.objects.order_by('role_name'),
         empty_label='Select Role',
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control',
+            }
+        ),
+    )
+
+    department = forms.ModelChoiceField(
+        queryset=Department.objects.filter(
+            is_active=True
+        ).order_by('name'),
+        required=False,
+        empty_label='Select Department',
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -112,3 +124,45 @@ class RolePermissionForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class DepartmentForm(forms.ModelForm):
+
+    class Meta:
+        model = Department
+        fields = [
+            'name',
+            'code',
+            'description',
+            'is_active',
+        ]
+        widgets = {
+            'name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'Department name',
+                }
+            ),
+            'code': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                    'placeholder': 'DEPARTMENT CODE',
+                }
+            ),
+            'description': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 5,
+                    'placeholder': 'Short description',
+                }
+            ),
+            'is_active': forms.CheckboxInput(
+                attrs={
+                    'class': 'form-check-input',
+                }
+            ),
+        }
+
+    def clean_code(self):
+        code = (self.cleaned_data.get('code') or '').strip()
+        return code.upper()

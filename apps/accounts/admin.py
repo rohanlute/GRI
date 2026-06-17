@@ -1,7 +1,22 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, Role
+from .models import User, Role, Department
+
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'name',
+        'code',
+        'is_active',
+        'created_at',
+        'updated_at'
+    )
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'code', 'description')
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(Role)

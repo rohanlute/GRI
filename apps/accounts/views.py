@@ -6,11 +6,13 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .mixins import *
 from django.urls import reverse_lazy
-from django.views.generic import (ListView,CreateView,UpdateView,DetailView)
+from django.views.generic import (ListView,CreateView,UpdateView,DetailView,DeleteView)
 from django.db import transaction
 from django.db.models import Q
-from .forms import UserCreateForm, RolePermissionForm
-from .models import User, Role
+from django.utils import timezone
+from datetime import timedelta
+from .forms import UserCreateForm, RolePermissionForm, DepartmentForm
+from .models import User, Role, Department
 from apps.accounts.models.permission import Permissions
 from apps.companies.models import Company
 
@@ -107,7 +109,7 @@ class UserListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = User.objects.select_related('role', 'company').order_by('-id')
+        queryset = User.objects.select_related('role', 'company','department').order_by('-id')
         if not user.is_super_admin:
             queryset = queryset.filter(company=user.company)
 
@@ -119,7 +121,7 @@ class UserListView(LoginRequiredMixin, ListView):
                 Q(email__icontains=search) |
                 Q(mobile_number__icontains=search) |
                 Q(employee_code__icontains=search) |
-                Q(department__icontains=search) |
+                Q(department__name__icontains=search) |
                 Q(company__company_name__icontains=search)
             )
 
@@ -354,9 +356,93 @@ class DepartmentListView(LoginRequiredMixin, TemplateView):
 
     template_name = ('accounts/department/department_list.html')
 
-# ================= Department Create ==============
-class DepartmentCreateView(LoginRequiredMixin, TemplateView):
+    def get_queryset(self):
+        queryset = Department.objects.order_by('-created_at')
+        search = self.request.GET.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(code__icontains=search) |
+                Q(description__icontains=search)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        departments = self.get_queryset()
+        cutoff = timezone.now() - timedelta(days=30)
+
+        context['departments'] = departments
+        context['total_departments_count'] = Department.objects.count()
+        context['active_departments_count'] = Department.objects.filter(is_active=True).count()
+        context['inactive_departments_count'] = Department.objects.filter(is_active=False).count()
+        context['new_departments_count'] = Department.objects.filter(created_at__gte=cutoff).count()
+        context['search_query'] = self.request.GET.get('search', '').strip()
+
+        return context
+
+
+class DepartmentCreateView(LoginRequiredMixin, CreateView):
 
     login_url = 'accounts:login'
 
+    model = Department
+    form_class = DepartmentForm
     template_name = ('accounts/department/department_create.html')
+    success_url = reverse_lazy('accounts:department_list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['is_active'].initial = True
+        return form
+
+    def form_valid(self, form):
+        department = form.save()
+        messages.success(self.request, f'Department "{department.name}" created successfully.')
+        return redirect(self.success_url)
+
+
+class DepartmentDetailView(LoginRequiredMixin, DetailView):
+
+    login_url = 'accounts:login'
+    model = Department
+    template_name = ('accounts/department/department_view.html')
+    context_object_name = 'department'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['employee_count'] = self.object.employee_count
+        context['active_employee_count'] = self.object.active_employee_count
+        return context
+
+
+class DepartmentUpdateView(LoginRequiredMixin, UpdateView):
+
+    login_url = 'accounts:login'
+    model = Department
+    form_class = DepartmentForm
+    template_name = ('accounts/department/department_edit.html')
+    context_object_name = 'department'
+    success_url = reverse_lazy('accounts:department_list')
+
+    def form_valid(self, form):
+        department = form.save()
+        messages.success(self.request, f'Department "{department.name}" updated successfully.')
+        return redirect(self.success_url)
+
+
+class DepartmentDeleteView(LoginRequiredMixin, DeleteView):
+
+    login_url = 'accounts:login'
+
+    model = Department
+    template_name = ('accounts/department/department_delete.html')
+    context_object_name = 'department'
+    success_url = reverse_lazy('accounts:department_list')
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        department_name = self.object.name
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, f'Department "{department_name}" deleted successfully.')
+        return response

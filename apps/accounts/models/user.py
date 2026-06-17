@@ -17,10 +17,12 @@ class User(AbstractUser):
         null=True
     )
 
-    department = models.CharField(
-        max_length=100,
+    department = models.ForeignKey(
+        'accounts.Department',
+        on_delete = models.SET_NULL,
         blank=True,
-        null=True
+        null=True,
+        related_name = 'users'
     )
 
     designation = models.CharField(
