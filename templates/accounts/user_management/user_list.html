@@ -207,7 +207,7 @@
                                 <td>{{ user.username }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>{{ user.mobile_number|default:"-" }}</td>
-                                <!-- <td>{{ user.department|default:"-" }}</td> -->
+                                <!-- <td>{{ user.department.name|default:'-' }}</td> -->
                                 <td>
                                     {% if user.is_active %}
                                         <span class="badge bg-soft-success text-success">Active</span>
