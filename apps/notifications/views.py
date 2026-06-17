@@ -12,7 +12,7 @@ class NotificationListView(
 
     login_url = 'accounts:login'
 
-    template_name = 'notifications/notification_list.html'
+    template_name = 'applications/notification_list.html'
 
     def get_context_data(self, **kwargs):
 
