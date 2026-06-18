@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def brsr_list(request):
+    return render(request, 'brsr/brsr_list.html')
