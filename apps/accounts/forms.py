@@ -1,6 +1,7 @@
 from django import forms
 from .models import User, Role, Department
 from apps.accounts.models.permission import Permissions
+from apps.companies.models import Company
 
 
 class UserCreateForm(forms.ModelForm):
@@ -32,11 +33,22 @@ class UserCreateForm(forms.ModelForm):
         ),
     )
 
+    company = forms.ModelChoiceField(
+        queryset=Company.objects.filter(is_active=True).order_by('company_name'),
+        empty_label='Select Company',
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control',
+            }
+        ),
+    )
+
     class Meta:
         model = User
 
         fields = [
             'role',
+            'company',
             'designation',
             'employee_code',
             'full_name',

@@ -40,6 +40,13 @@ class CustomUserAdmin(UserAdmin):
         'is_active'
     )
 
+    filter_horizontal = (
+        'assigned_plants',
+        'assigned_zones',
+        'assigned_locations',
+        'assigned_sublocations',
+    )
+
     fieldsets = UserAdmin.fieldsets + (
         (
             'Additional Information',
@@ -53,7 +60,11 @@ class CustomUserAdmin(UserAdmin):
                     'designation',
                     'about',
                     'profile_image',
-                    'is_company_user'
+                    'is_company_user',
+                    'assigned_plants',
+                    'assigned_zones',
+                    'assigned_locations',
+                    'assigned_sublocations',
                 )
             }
         ),

@@ -8,13 +8,12 @@ from .mixins import *
 from django.urls import reverse_lazy
 from django.views.generic import (ListView,CreateView,UpdateView,DetailView,DeleteView)
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils import timezone
 from datetime import timedelta
 from .forms import UserCreateForm, RolePermissionForm, DepartmentForm
 from .models import User, Role, Department
 from apps.accounts.models.permission import Permissions
-from apps.companies.models import Company
 from apps.organizations.models import Plant, Zone, Location, SubLocation
 
 
@@ -96,6 +95,228 @@ class DashboardView(LoginRequiredMixin,TemplateView):
         return context
 
 
+class UserLocationAssignmentMixin:
+
+    assignment_plant_name = 'assigned_plants'
+    assignment_zone_name = 'assigned_zones'
+    assignment_location_name = 'assigned_locations'
+    assignment_sublocation_name = 'assigned_sublocations'
+
+    def can_choose_company(self):
+        user = self.request.user
+        return bool(user.is_superuser or user.is_super_admin)
+
+    def configure_company_field(self, form):
+        company_field = form.fields['company']
+        user = self.request.user
+
+        if self.can_choose_company():
+            company_field.queryset = company_field.queryset.model.objects.filter(
+                is_active=True
+            ).order_by('company_name')
+            company_field.required = True
+
+            if self.request.method == 'GET' and getattr(self, 'object', None):
+                form.initial.setdefault('company', self.object.company_id)
+        else:
+            company = getattr(user, 'company', None)
+            company_field.queryset = company_field.queryset.model.objects.filter(
+                pk=getattr(company, 'pk', None)
+            )
+            company_field.required = False
+            company_field.disabled = True
+            form.initial['company'] = getattr(company, 'pk', None)
+
+    def get_assigned_ids(self, user_obj=None):
+        if not user_obj:
+            return {
+                'plants': set(),
+                'zones': set(),
+                'locations': set(),
+                'sublocations': set(),
+            }
+
+        return {
+            'plants': set(user_obj.assigned_plants.values_list('id', flat=True)),
+            'zones': set(user_obj.assigned_zones.values_list('id', flat=True)),
+            'locations': set(user_obj.assigned_locations.values_list('id', flat=True)),
+            'sublocations': set(user_obj.assigned_sublocations.values_list('id', flat=True)),
+        }
+
+    def get_assignment_scope_plants(self, user_obj=None):
+        user = self.request.user
+        queryset = Plant.objects.filter(is_active=True)
+
+        if not user.is_super_admin:
+            queryset = queryset.filter(created_by__company=user.company)
+
+        if user_obj:
+            assigned_ids = self.get_selected_assignment_ids(user_obj)['plants']
+            queryset = queryset.filter(Q(is_active=True) | Q(id__in=assigned_ids))
+
+        return queryset.distinct()
+
+    def get_assignment_tree(self, user_obj=None):
+        assigned_ids = self.get_selected_assignment_ids(user_obj)
+
+        zone_queryset = Zone.objects.filter(is_active=True)
+        location_queryset = Location.objects.filter(is_active=True)
+        sublocation_queryset = SubLocation.objects.filter(is_active=True)
+
+        if user_obj:
+            zone_queryset = zone_queryset.filter(Q(is_active=True) | Q(id__in=assigned_ids['zones']))
+            location_queryset = location_queryset.filter(Q(is_active=True) | Q(id__in=assigned_ids['locations']))
+            sublocation_queryset = sublocation_queryset.filter(Q(is_active=True) | Q(id__in=assigned_ids['sublocations']))
+
+        return self.get_assignment_scope_plants(user_obj).prefetch_related(
+            Prefetch(
+                'zones',
+                queryset=zone_queryset.prefetch_related(
+                    Prefetch(
+                        'locations',
+                        queryset=location_queryset.prefetch_related(
+                            Prefetch(
+                                'sublocations',
+                                queryset=sublocation_queryset
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+    def _post_id_set(self, field_name):
+        return {
+            int(value)
+            for value in self.request.POST.getlist(field_name)
+            if str(value).isdigit()
+        }
+
+    def _expand_assignment_ids(self, plant_ids, zone_ids, location_ids, sublocation_ids):
+        expanded_plants = set(plant_ids)
+        expanded_zones = set(zone_ids)
+        expanded_locations = set(location_ids)
+        expanded_sublocations = set(sublocation_ids)
+
+        zone_qs = Zone.objects.filter(id__in=expanded_zones).select_related('plant')
+        location_qs = Location.objects.filter(id__in=expanded_locations).select_related('zone__plant')
+        sublocation_qs = SubLocation.objects.filter(id__in=expanded_sublocations).select_related('location__zone__plant')
+
+        expanded_plants.update(zone_qs.values_list('plant_id', flat=True))
+        expanded_plants.update(location_qs.values_list('zone__plant_id', flat=True))
+        expanded_plants.update(sublocation_qs.values_list('location__zone__plant_id', flat=True))
+
+        expanded_zones.update(location_qs.values_list('zone_id', flat=True))
+        expanded_zones.update(sublocation_qs.values_list('location__zone_id', flat=True))
+
+        expanded_locations.update(sublocation_qs.values_list('location_id', flat=True))
+
+        return {
+            'plants': expanded_plants,
+            'zones': expanded_zones,
+            'locations': expanded_locations,
+            'sublocations': expanded_sublocations,
+        }
+
+    def get_selected_assignment_ids(self, user_obj=None):
+        if self.request.method == 'POST':
+            return self._expand_assignment_ids(
+                self._post_id_set(self.assignment_plant_name),
+                self._post_id_set(self.assignment_zone_name),
+                self._post_id_set(self.assignment_location_name),
+                self._post_id_set(self.assignment_sublocation_name),
+            )
+
+        if user_obj:
+            selected_plants = set(user_obj.assigned_plants.values_list('id', flat=True))
+            selected_zones = set(user_obj.assigned_zones.values_list('id', flat=True))
+            selected_locations = set(user_obj.assigned_locations.values_list('id', flat=True))
+            selected_sublocations = set(user_obj.assigned_sublocations.values_list('id', flat=True))
+
+            zone_qs = Zone.objects.filter(id__in=selected_zones).select_related('plant')
+            location_qs = Location.objects.filter(id__in=selected_locations).select_related('zone__plant')
+            sublocation_qs = SubLocation.objects.filter(id__in=selected_sublocations).select_related('location__zone__plant')
+
+            selected_plants.update(zone_qs.values_list('plant_id', flat=True))
+            selected_plants.update(location_qs.values_list('zone__plant_id', flat=True))
+            selected_plants.update(sublocation_qs.values_list('location__zone__plant_id', flat=True))
+
+            selected_zones.update(location_qs.values_list('zone_id', flat=True))
+            selected_zones.update(sublocation_qs.values_list('location__zone_id', flat=True))
+
+            selected_locations.update(sublocation_qs.values_list('location_id', flat=True))
+
+            return {
+                'plants': selected_plants,
+                'zones': selected_zones,
+                'locations': selected_locations,
+                'sublocations': selected_sublocations,
+            }
+
+        return {
+            'plants': set(),
+            'zones': set(),
+            'locations': set(),
+            'sublocations': set(),
+        }
+
+    def get_assignment_context(self, user_obj=None):
+        selected_ids = self.get_selected_assignment_ids(user_obj)
+        return {
+            'company_plants': self.get_assignment_tree(user_obj),
+            'selected_plant_ids': selected_ids['plants'],
+            'selected_zone_ids': selected_ids['zones'],
+            'selected_location_ids': selected_ids['locations'],
+            'selected_sublocation_ids': selected_ids['sublocations'],
+        }
+
+    def sync_user_assignments(self, user_obj):
+        scope_plants = self.get_assignment_scope_plants()
+
+        selected_ids = self._expand_assignment_ids(
+            self._post_id_set(self.assignment_plant_name),
+            self._post_id_set(self.assignment_zone_name),
+            self._post_id_set(self.assignment_location_name),
+            self._post_id_set(self.assignment_sublocation_name),
+        )
+
+        allowed_plants = set(
+            scope_plants.filter(id__in=selected_ids['plants']).values_list('id', flat=True)
+        )
+
+        zone_qs = Zone.objects.filter(
+            id__in=selected_ids['zones'],
+            is_active=True,
+            plant__in=scope_plants,
+        ).select_related('plant')
+        allowed_zones = set(zone_qs.values_list('id', flat=True))
+        allowed_plants.update(zone_qs.values_list('plant_id', flat=True))
+
+        location_qs = Location.objects.filter(
+            id__in=selected_ids['locations'],
+            is_active=True,
+            zone__plant__in=scope_plants,
+        ).select_related('zone__plant')
+        allowed_locations = set(location_qs.values_list('id', flat=True))
+        allowed_zones.update(location_qs.values_list('zone_id', flat=True))
+        allowed_plants.update(location_qs.values_list('zone__plant_id', flat=True))
+
+        sublocation_qs = SubLocation.objects.filter(
+            id__in=selected_ids['sublocations'],
+            is_active=True,
+            location__zone__plant__in=scope_plants,
+        ).select_related('location__zone__plant')
+        allowed_sublocations = set(sublocation_qs.values_list('id', flat=True))
+        allowed_locations.update(sublocation_qs.values_list('location_id', flat=True))
+        allowed_zones.update(sublocation_qs.values_list('location__zone_id', flat=True))
+        allowed_plants.update(sublocation_qs.values_list('location__zone__plant_id', flat=True))
+
+        user_obj.assigned_plants.set(allowed_plants)
+        user_obj.assigned_zones.set(allowed_zones)
+        user_obj.assigned_locations.set(allowed_locations)
+        user_obj.assigned_sublocations.set(allowed_sublocations)
+
+
 # -----------------------------------------------
 # ============= USER LIST =======================
 # -----------------------------------------------
@@ -166,9 +387,8 @@ class UserListView(LoginRequiredMixin, ListView):
 
         return context
 
-# ============= USER LIST =======================
 
-class UserCreateView(LoginRequiredMixin, CreateView):
+class UserCreateView(UserLocationAssignmentMixin, LoginRequiredMixin, CreateView):
 
     model = User
 
@@ -181,49 +401,43 @@ class UserCreateView(LoginRequiredMixin, CreateView):
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         form.fields['is_active'].initial = False
+        self.configure_company_field(form)
         return form
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        # For super admins show all; for company users show only company-created plants
-        if user.is_super_admin:
-            company_plants = Plant.objects.filter(is_active=True)
-        else:
-            company_plants = Plant.objects.filter(created_by__company=user.company, is_active=True)
-
-        context['company_plants'] = company_plants
+        context.update(self.get_assignment_context())
         return context
 
     
 
     def form_valid(self, form):
 
-        user = form.save(commit=False)
+        with transaction.atomic():
+            user = form.save(commit=False)
 
-        if self.request.FILES.get('profile_image'):
-            user.profile_image = self.request.FILES.get('profile_image')
+            if self.request.FILES.get('profile_image'):
+                user.profile_image = self.request.FILES.get('profile_image')
 
-        user.set_password(form.cleaned_data['password'])
+            user.set_password(form.cleaned_data['password'])
 
-        company_name = (self.request.POST.get('companyname') or '').strip()
-        company = Company.objects.filter(
-            Q(company_code__iexact=company_name) |
-            Q(company_name__iexact=company_name)
-        ).first()
+            if self.can_choose_company():
+                company = form.cleaned_data.get('company')
+                if company is None:
+                    form.add_error('company', 'Please select a company.')
+                    return self.form_invalid(form)
+                user.company = company
+            else:
+                company = getattr(self.request.user, 'company', None)
+                if company is None:
+                    form.add_error(None, 'Your account is not linked to a company.')
+                    return self.form_invalid(form)
+                user.company = company
 
-        if company is None:
-            company = Company.objects.order_by('id').first()
+            user.is_company_user = False
 
-        if company is None:
-            form.add_error(None, 'Please create a company before creating a user.')
-            return self.form_invalid(form)
-
-        user.company = company
-
-        user.is_company_user = False
-
-        user.save()
+            user.save()
+            self.sync_user_assignments(user)
 
         messages.success(
             self.request,
@@ -241,7 +455,7 @@ class UserCreateView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
     
 
-class UserUpdateView(LoginRequiredMixin, UpdateView):
+class UserUpdateView(UserLocationAssignmentMixin, LoginRequiredMixin, UpdateView):
 
     model = User
 
@@ -256,14 +470,7 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
 
         context['page_title'] = 'Edit User'
-
-        user = self.request.user
-        if user.is_super_admin:
-            company_plants = Plant.objects.filter(is_active=True)
-        else:
-            company_plants = Plant.objects.filter(created_by__company=user.company, is_active=True)
-
-        context['company_plants'] = company_plants
+        context.update(self.get_assignment_context(self.object))
 
         return context
 
@@ -271,6 +478,7 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
         form = super().get_form(form_class)
         form.fields['password'].required = False
         form.fields['confirm_password'].required = False
+        self.configure_company_field(form)
         return form
 
     def form_valid(self, form):
@@ -284,7 +492,21 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
             if password:
                 user.set_password(password)
 
+            if self.can_choose_company():
+                company = form.cleaned_data.get('company')
+                if company is None:
+                    form.add_error('company', 'Please select a company.')
+                    return self.form_invalid(form)
+                user.company = company
+            else:
+                company = getattr(self.request.user, 'company', None)
+                if company is None:
+                    form.add_error(None, 'Your account is not linked to a company.')
+                    return self.form_invalid(form)
+                user.company = company
+
             user.save()
+            self.sync_user_assignments(user)
 
         messages.success(self.request, 'User updated successfully.')
         return redirect(self.success_url)

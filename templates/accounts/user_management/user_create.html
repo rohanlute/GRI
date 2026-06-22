@@ -26,6 +26,121 @@
         cursor: pointer;
         z-index: 10;
     }
+
+    .location-assignment-section {
+        border: 1px solid #dfe6ef;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+        padding: 18px;
+    }
+
+    .assignment-toolbar {
+        background: #eef2f7;
+        border: 1px solid #e3e8f0;
+        border-radius: 12px;
+        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .assignment-panel {
+        border: 1px solid #dde4ee;
+        border-radius: 14px;
+        background: #fff;
+        padding: 14px;
+    }
+
+    .assignment-group-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .assignment-group-note {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .assignment-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    @media (max-width: 991.98px) {
+        .assignment-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .assignment-node {
+        border: 1px solid #dde4ee;
+        border-radius: 12px;
+        background: #fff;
+        padding: 10px 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        transition: all 0.15s ease;
+    }
+
+    .assignment-node.is-selected {
+        background: #eef6ff;
+        border-color: #0d6efd;
+        box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.08);
+    }
+
+    .assignment-node.is-disabled {
+        background: #f8fafc;
+        opacity: 0.55;
+    }
+
+    .assignment-node input {
+        margin-top: 4px;
+        flex: 0 0 auto;
+    }
+
+    .assignment-node-label {
+        font-weight: 600;
+        line-height: 1.35;
+        color: #111827;
+    }
+
+    .assignment-node-label small {
+        display: block;
+        font-weight: 400;
+        color: #6b7280;
+    }
+
+    .assignment-parent-header {
+        background: #d8eef5;
+        border-left: 4px solid #0f8aa4;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: #0f4f63;
+    }
+
+    .assignment-child-block {
+        margin-bottom: 18px;
+        padding-left: 12px;
+        border-left: 3px solid #e5eef5;
+    }
+
+    .assignment-empty-state {
+        border: 1px dashed #cfd8e3;
+        border-radius: 12px;
+        background: #f8fbff;
+        color: #607084;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        font-size: 13px;
+    }
 </style>
 {% endblock %}
 
@@ -84,6 +199,9 @@
                         <ul class="nav nav-tabs flex-wrap w-100 text-center customers-nav-tabs" id="myTab" role="tablist">
                             <li class="nav-item flex-fill border-top" role="presentation">
                                 <a href="javascript:void(0);" class="nav-link active" data-bs-toggle="tab" data-bs-target="#INprofileTab" role="tab">Profile</a>
+                            </li>
+                            <li class="nav-item flex-fill border-top" role="presentation">
+                                <a href="javascript:void(0);" class="nav-link" data-bs-toggle="tab" data-bs-target="#INlocationTab" role="tab">Location Assignment</a>
                             </li>
                             <li class="nav-item flex-fill border-top" role="presentation">
                                 <a href="javascript:void(0);" class="nav-link" data-bs-toggle="tab" data-bs-target="#INpasswordTab" role="tab">Password</a>
@@ -173,8 +291,18 @@
                                     <div class="col-lg-8">
                                         <div class="input-group">
                                             <div class="input-group-text"><i class="feather-compass"></i></div>
-                                            <input name="companyname" type="text" class="form-control" id="companyInput" value="Protegk IT" readonly >
+                                            {{ form.company }}
                                         </div>
+                                        <div class="fs-12 text-muted mt-1">
+                                            {% if form.company.field.disabled %}
+                                                Your company is fixed from your user account.
+                                            {% else %}
+                                                Select the company for this user.
+                                            {% endif %}
+                                        </div>
+                                        {% if form.company.errors %}
+                                            <div class="invalid-feedback d-block">{{ form.company.errors|striptags }}</div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="row mb-4 align-items-center">
@@ -236,27 +364,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row mb-4 align-items-start">
-                                    <div class="col-lg-4">
-                                        <label class="fw-semibold">Assign Plants / Zones / Locations:</label>
-                                    </div>
-                                    <div class="col-lg-8">
-                                        {% if company_plants %}
-                                            <div class="mb-2"><strong>Plants</strong></div>
-                                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                                {% for plant in company_plants %}
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="assigned_plants" value="{{ plant.id }}" id="plant-{{ plant.id }}">
-                                                        <label class="form-check-label" for="plant-{{ plant.id }}">{{ plant.name }}</label>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                            {# Zones/locations/sublocations will be loaded client-side via AJAX if needed #}
-                                        {% else %}
-                                            <div class="text-muted">No plants available for assignment.</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
                                 <div class="row mb-4 align-items-center">
                                     <div class="col-lg-4">
                                         <label for="employee_codeInput" class="fw-semibold">Employee ID: </label>
@@ -267,6 +374,151 @@
                                             <input name="employee_code" type="text" class="form-control" id="employee_codeInput" placeholder="Employee ID" value="{{ object.employee_code|default:'' }}">
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="INlocationTab" role="tabpanel">
+                            <div class="card-body personal-info">
+                                <div class="mb-4 d-flex align-items-center justify-content-between">
+                                    <h5 class="fw-bold mb-0 me-4">
+                                        <span class="d-block mb-2">Location Assignment:</span>
+                                        <span class="fs-12 fw-normal text-muted text-truncate-1-line">Select plants first, then zones, locations, and sub-locations.</span>
+                                    </h5>
+                                </div>
+                                <div class="location-assignment-section">
+                                    <div class="assignment-group-title">Assigned Plants *</div>
+                                    <div class="assignment-group-note">Select multiple plants</div>
+                                    <div class="assignment-toolbar">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" data-select-all="assigned_plants">
+                                            <i class="feather-check-square me-1"></i>Select All
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-deselect-all="assigned_plants">
+                                            <i class="feather-square me-1"></i>Deselect All
+                                        </button>
+                                    </div>
+                                    <div class="assignment-panel mb-4">
+                                        {% if company_plants %}
+                                            <div class="assignment-grid">
+                                                {% for plant in company_plants %}
+                                                    <label class="assignment-node {% if plant.id in selected_plant_ids %}is-selected{% endif %}" data-node-type="plant">
+                                                        <input class="assignment-input" type="checkbox" name="assigned_plants" value="{{ plant.id }}" {% if plant.id in selected_plant_ids %}checked{% endif %}>
+                                                        <span class="assignment-node-label">
+                                                            {{ plant.name }}
+                                                            <small>{{ plant.code }}</small>
+                                                        </span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted">No active plants available for assignment.</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="assignment-group-title">Assigned Zones *</div>
+                                    <div class="assignment-group-note">Please select plant first</div>
+                                    <div class="assignment-toolbar">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" data-select-all="assigned_zones">
+                                            <i class="feather-check-square me-1"></i>Select All
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-deselect-all="assigned_zones">
+                                            <i class="feather-square me-1"></i>Deselect All
+                                        </button>
+                                    </div>
+                                    <div class="assignment-panel mb-4">
+                                        <div class="assignment-empty-state" data-empty-for="zones">Please select plant first.</div>
+                                        {% if company_plants %}
+                                            {% for plant in company_plants %}
+                                                <div class="assignment-child-block" data-plant-block="{{ plant.id }}">
+                                                    <div class="assignment-parent-header">{{ plant.name }}</div>
+                                                    <div class="assignment-grid">
+                                                        {% for zone in plant.zones.all %}
+                                                            <label class="assignment-node {% if zone.id in selected_zone_ids %}is-selected{% endif %} {% if plant.id not in selected_plant_ids %}is-disabled{% endif %}" data-node-type="zone" data-parent-plant-id="{{ plant.id }}">
+                                                                <input class="assignment-input" type="checkbox" name="assigned_zones" value="{{ zone.id }}" {% if zone.id in selected_zone_ids %}checked{% endif %} {% if plant.id not in selected_plant_ids %}disabled{% endif %}>
+                                                                <span class="assignment-node-label">
+                                                                    {{ zone.name }}
+                                                                    <small>{{ zone.code }}</small>
+                                                                </span>
+                                                            </label>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="assignment-group-title">Assigned Locations *</div>
+                                    <div class="assignment-group-note">Please select zone first</div>
+                                    <div class="assignment-toolbar">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" data-select-all="assigned_locations">
+                                            <i class="feather-check-square me-1"></i>Select All
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-deselect-all="assigned_locations">
+                                            <i class="feather-square me-1"></i>Deselect All
+                                        </button>
+                                    </div>
+                                    <div class="assignment-panel mb-4">
+                                        <div class="assignment-empty-state" data-empty-for="locations">Please select zone first.</div>
+                                        {% if company_plants %}
+                                            {% for plant in company_plants %}
+                                                {% for zone in plant.zones.all %}
+                                                    <div class="assignment-child-block" data-zone-block="{{ zone.id }}" data-parent-plant-id="{{ plant.id }}">
+                                                        <div class="assignment-parent-header">{{ plant.name }} - {{ zone.name }}</div>
+                                                        <div class="assignment-grid">
+                                                            {% for location in zone.locations.all %}
+                                                                <label class="assignment-node {% if location.id in selected_location_ids %}is-selected{% endif %} {% if zone.id not in selected_zone_ids %}is-disabled{% endif %}" data-node-type="location" data-parent-zone-id="{{ zone.id }}">
+                                                                    <input class="assignment-input" type="checkbox" name="assigned_locations" value="{{ location.id }}" {% if location.id in selected_location_ids %}checked{% endif %} {% if zone.id not in selected_zone_ids %}disabled{% endif %}>
+                                                                    <span class="assignment-node-label">
+                                                                        {{ location.name }}
+                                                                        <small>{{ location.code }}</small>
+                                                                    </span>
+                                                                </label>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="assignment-group-title">Assigned Sub-Locations *</div>
+                                    <div class="assignment-group-note">Please select location first</div>
+                                    <div class="assignment-toolbar">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" data-select-all="assigned_sublocations">
+                                            <i class="feather-check-square me-1"></i>Select All
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-deselect-all="assigned_sublocations">
+                                            <i class="feather-square me-1"></i>Deselect All
+                                        </button>
+                                    </div>
+                                    <div class="assignment-panel">
+                                        <div class="assignment-empty-state" data-empty-for="sublocations">Please select location first.</div>
+                                        {% if company_plants %}
+                                            {% for plant in company_plants %}
+                                                {% for zone in plant.zones.all %}
+                                                    {% for location in zone.locations.all %}
+                                                        <div class="assignment-child-block" data-location-block="{{ location.id }}" data-parent-zone-id="{{ zone.id }}">
+                                                            <div class="assignment-parent-header">{{ plant.name }} - {{ zone.name }} - {{ location.name }}</div>
+                                                            <div class="assignment-grid">
+                                                                {% for sublocation in location.sublocations.all %}
+                                                                    <label class="assignment-node {% if sublocation.id in selected_sublocation_ids %}is-selected{% endif %} {% if location.id not in selected_location_ids %}is-disabled{% endif %}" data-node-type="sublocation" data-parent-location-id="{{ location.id }}">
+                                                                        <input class="assignment-input" type="checkbox" name="assigned_sublocations" value="{{ sublocation.id }}" {% if sublocation.id in selected_sublocation_ids %}checked{% endif %} {% if location.id not in selected_location_ids %}disabled{% endif %}>
+                                                                        <span class="assignment-node-label">
+                                                                            {{ sublocation.name }}
+                                                                            {% if sublocation.code %}<small>{{ sublocation.code }}</small>{% endif %}
+                                                                        </span>
+                                                                    </label>
+                                                                {% endfor %}
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+
+                                    {% if form.non_field_errors %}
+                                        <div class="invalid-feedback d-block mt-2">{{ form.non_field_errors|striptags }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -386,6 +638,135 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    function syncAssignmentCards() {
+        const plantCheckboxes = Array.from(document.querySelectorAll('input[name="assigned_plants"]'));
+        const zoneCheckboxes = Array.from(document.querySelectorAll('input[name="assigned_zones"]'));
+        const locationCheckboxes = Array.from(document.querySelectorAll('input[name="assigned_locations"]'));
+        const sublocationCheckboxes = Array.from(document.querySelectorAll('input[name="assigned_sublocations"]'));
+
+        const selectedPlantIds = new Set(plantCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value));
+        const selectedZoneIds = new Set();
+        const selectedLocationIds = new Set();
+
+        zoneCheckboxes.forEach((checkbox) => {
+            const card = checkbox.closest('.assignment-node');
+            const block = checkbox.closest('.assignment-child-block');
+            const enabled = selectedPlantIds.has(card.dataset.parentPlantId);
+
+            checkbox.disabled = !enabled;
+
+            if (!enabled) {
+                checkbox.checked = false;
+            }
+
+            card.classList.toggle('is-disabled', !enabled);
+            card.classList.toggle('is-selected', checkbox.checked);
+            card.hidden = !enabled;
+            if (block) {
+                block.hidden = !enabled;
+            }
+
+            if (checkbox.checked) {
+                selectedZoneIds.add(checkbox.value);
+            }
+        });
+
+        const hasVisibleZones = zoneCheckboxes.some((checkbox) => !checkbox.closest('.assignment-node').hidden);
+
+        document.querySelectorAll('[data-empty-for="zones"]').forEach(function (emptyState) {
+            emptyState.hidden = hasVisibleZones;
+        });
+
+        locationCheckboxes.forEach((checkbox) => {
+            const card = checkbox.closest('.assignment-node');
+            const block = checkbox.closest('.assignment-child-block');
+            const enabled = selectedZoneIds.has(card.dataset.parentZoneId);
+
+            checkbox.disabled = !enabled;
+
+            if (!enabled) {
+                checkbox.checked = false;
+            }
+
+            card.classList.toggle('is-disabled', !enabled);
+            card.classList.toggle('is-selected', checkbox.checked);
+            card.hidden = !enabled;
+            if (block) {
+                block.hidden = !enabled;
+            }
+
+            if (checkbox.checked) {
+                selectedLocationIds.add(checkbox.value);
+            }
+        });
+
+        const hasVisibleLocations = locationCheckboxes.some((checkbox) => !checkbox.closest('.assignment-node').hidden);
+
+        document.querySelectorAll('[data-empty-for="locations"]').forEach(function (emptyState) {
+            emptyState.hidden = hasVisibleLocations;
+        });
+
+        sublocationCheckboxes.forEach((checkbox) => {
+            const card = checkbox.closest('.assignment-node');
+            const block = checkbox.closest('.assignment-child-block');
+            const enabled = selectedLocationIds.has(card.dataset.parentLocationId);
+
+            checkbox.disabled = !enabled;
+
+            if (!enabled) {
+                checkbox.checked = false;
+            }
+
+            card.classList.toggle('is-disabled', !enabled);
+            card.classList.toggle('is-selected', checkbox.checked);
+            card.hidden = !enabled;
+            if (block) {
+                block.hidden = !enabled;
+            }
+        });
+
+        const hasVisibleSublocations = sublocationCheckboxes.some((checkbox) => !checkbox.closest('.assignment-node').hidden);
+
+        document.querySelectorAll('[data-empty-for="sublocations"]').forEach(function (emptyState) {
+            emptyState.hidden = hasVisibleSublocations;
+        });
+
+        plantCheckboxes.forEach((checkbox) => {
+            const card = checkbox.closest('.assignment-node');
+            card.classList.toggle('is-selected', checkbox.checked);
+        });
+    }
+
+    document.querySelectorAll('.assignment-input').forEach(function (checkbox) {
+        checkbox.addEventListener('change', syncAssignmentCards);
+    });
+
+    document.querySelectorAll('[data-select-all]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const fieldName = this.dataset.selectAll;
+            document.querySelectorAll(`input[name="${fieldName}"]`).forEach(function (checkbox) {
+                if (!checkbox.disabled) {
+                    checkbox.checked = true;
+                }
+            });
+            syncAssignmentCards();
+        });
+    });
+
+    document.querySelectorAll('[data-deselect-all]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const fieldName = this.dataset.deselectAll;
+            document.querySelectorAll(`input[name="${fieldName}"]`).forEach(function (checkbox) {
+                checkbox.checked = false;
+            });
+            syncAssignmentCards();
+        });
+    });
+
+    syncAssignmentCards();
 });
 </script>
 {% endblock %}
