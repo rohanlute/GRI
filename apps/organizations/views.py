@@ -18,6 +18,10 @@ from django.db.models.functions import Cast, Substr
 
 class CanAccessOrganizationMixin(UserPassesTestMixin):
 
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and (user.is_superuser or (user.role and user.role.role_code == 'COMPANYADMIN'))
+
     def get_allowed_plants(self):
         user = self.request.user
 
