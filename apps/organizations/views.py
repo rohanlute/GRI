@@ -360,83 +360,6 @@ class LocationDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-# ==================== DEPARTMENT VIEWS ====================
-from django.shortcuts import redirect
-
-class DepartmentListView(LoginRequiredMixin, CanAccessOrganizationMixin,  ListView):
-    """List all departments"""
-    model = Department
-    template_name = 'organizations/department_list.html'
-    context_object_name = 'departments'
-    paginate_by = 10
-    
-    def get_queryset(self):
-        queryset = Department.objects.all().annotate(
-            total_employees=Count('users'),
-            active_employees=Count('users', filter=Q(users__is_active=True))
-        ).order_by('-created_at')
-        
-        # Search
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(code__icontains=search)
-            )
-        
-        # Filter by status
-        status = self.request.GET.get('status')
-        if status == 'active':
-            queryset = queryset.filter(is_active=True)
-        elif status == 'inactive':
-            queryset = queryset.filter(is_active=False)
-        
-        return queryset
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search_query'] = self.request.GET.get('search', '')
-        context['selected_status'] = self.request.GET.get('status', '')
-        return context
-
-
-class DepartmentCreateView(LoginRequiredMixin, CanAccessOrganizationMixin,  CreateView):
-    """Create new department"""
-    model = Department
-    form_class = DepartmentForm
-    template_name = 'organizations/department_form.html'
-    success_url = reverse_lazy('organizations:department_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, f'Department {form.instance.name} created successfully!')
-        return super().form_valid(form)
-
-
-class DepartmentUpdateView(LoginRequiredMixin, CanAccessOrganizationMixin,  UpdateView):
-    """Update department"""
-    model = Department
-    form_class = DepartmentForm
-    template_name = 'organizations/department_form.html'
-    success_url = reverse_lazy('organizations:department_list')
-    
-    def form_valid(self, form):
-        messages.success(self.request, f'Department {form.instance.name} updated successfully!')
-        return super().form_valid(form)
-
-
-class DepartmentDeleteView(LoginRequiredMixin, CanAccessOrganizationMixin,  DeleteView):
-    """Delete department"""
-    model = Department
-    template_name = 'organizations/department_confirm_delete.html'
-    success_url = reverse_lazy('organizations:department_list')
-    
-    def delete(self, request, *args, **kwargs):
-        department = self.get_object()
-        messages.success(request, f'Department {department.name} deleted successfully!')
-        return super().delete(request, *args, **kwargs)
-    
-
-
 
 
 # ==================== ZONE VIEWS ====================
@@ -497,6 +420,11 @@ class ZoneCreateView(LoginRequiredMixin, CanAccessOrganizationMixin,  CreateView
     form_class = ZoneForm
     template_name = 'organizations/zone_form.html'
     success_url = reverse_lazy('organizations:zone_list')
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['plant'].queryset = self.get_allowed_plants().filter(is_active=True)
+        return form
     
     def form_valid(self, form):
         # Save the zone first

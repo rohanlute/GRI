@@ -171,36 +171,3 @@ class SubLocation(models.Model):
     def zone(self):
         """Get the zone through location"""
         return self.location.zone
-class Department(models.Model):
-    """Departments within organization"""
-    
-    name = models.CharField(max_length=200)
-    code = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True)
-    head_name = models.CharField(max_length=100, blank=True, help_text="Department Head Name")
-    head_email = models.EmailField(blank=True, help_text="Department Head Email")
-    head_phone = models.CharField(max_length=15, blank=True, help_text="Department Head Phone")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['name']
-        verbose_name = 'Department'
-        verbose_name_plural = 'Departments'
-    
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-    
-    def clean(self):
-        # Convert code to uppercase
-        if self.code:
-            self.code = self.code.upper()
-    
-    @property
-    def employee_count(self):
-        return self.users.count()
-    
-    @property
-    def active_employee_count(self):
-        return self.users.filter(is_active=True).count()

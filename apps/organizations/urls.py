@@ -27,10 +27,4 @@ urlpatterns = [
     path('locations/create/', views.LocationCreateView.as_view(), name='location_create'),
     path('locations/<int:pk>/edit/', views.LocationUpdateView.as_view(), name='location_update'),
     path('locations/<int:pk>/delete/', views.LocationDeleteView.as_view(), name='location_delete'),
-    
-    # Department URLs
-    path('departments/', views.DepartmentListView.as_view(), name='department_list'),
-    path('departments/create/', views.DepartmentCreateView.as_view(), name='department_create'),
-    path('departments/<int:pk>/edit/', views.DepartmentUpdateView.as_view(), name='department_update'),
-    path('departments/<int:pk>/delete/', views.DepartmentDeleteView.as_view(), name='department_delete'),
 ]

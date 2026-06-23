@@ -58,11 +58,3 @@ class SubLocationAdmin(admin.ModelAdmin):
         return obj.location.zone.plant.name
     get_plant.short_description = 'Plant'
     get_plant.admin_order_field = 'location__zone__plant__name'
-
-
-@admin.register(Department)
-class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'head_name', 'is_active', 'created_at']
-    list_filter = ['is_active']
-    search_fields = ['name', 'code', 'head_name']
-    ordering = ['name']

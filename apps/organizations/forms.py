@@ -1,5 +1,5 @@
 from django import forms
-from .models import Plant, Zone, Location, Department
+from .models import Plant, Zone, Location
 from django.core.exceptions import ValidationError
 
 
@@ -101,19 +101,3 @@ class LocationForm(forms.ModelForm):
                 raise ValidationError({'code' : "This code already exists in selected zone."})
 
         return cleaned_data            
-
-class DepartmentForm(forms.ModelForm):
-    """Department Form"""
-    
-    class Meta:
-        model = Department
-        fields = ['name', 'code', 'description', 'head_name', 'head_email', 'head_phone', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Department Name'}),
-            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Department Code (e.g., SAFETY)'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description'}),
-            'head_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Department Head Name'}),
-            'head_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Department Head Email'}),
-            'head_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Department Head Phone'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
