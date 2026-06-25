@@ -162,3 +162,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 's702.bom.secure-web.cloud' #config('EMAIL_HOST') #'mail.fireinspector.co.in' #'s437.bom7.mysecurecloudhost.com'
+EMAIL_USE_TLS = True               # Enable TLS
+EMAIL_USE_SSL = False 
+EMAIL_PORT = 587 
+EMAIL_HOST_USER = 'support@fireinspector.co.in'
+EMAIL_HOST_PASSWORD = 'Support@Fire'
+DEFAULT_FROM_EMAIL = 'Sustainability Reporting <support@fireinspector.co.in>'
+
+SITE_URL = "http://127.0.0.1:8000/"
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
